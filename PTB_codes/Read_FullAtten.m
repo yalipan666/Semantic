@@ -7,7 +7,7 @@
 % Press E -eye: to start eyelink setup, calibration or/and validation
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-function Read_Semantic
+function Read_FullAtten
 tic
 %%% tagging frequency
 f1 = 60;
@@ -23,7 +23,7 @@ if cfg.debugmode
     cfg.el.eyelink = 0;              %eyelink on/off
     cfg.el.override = 1;          %No eyelink in actual experiment, use only in case of fault
     cfg.DataPixxOnly = 0;      %for rapidmode testing without triggers with propixx
-    tt = 0.1;
+    tt = 0.01;
 else
     Screen('Preference', 'SkipSyncTests', 0); %must be 0 during experiment
     cfg.el.eyelink = 1;              %eyelink on/off
@@ -41,7 +41,7 @@ prompt = {'Exp date:', ...
     'Screen distance (cm): '};
 dlg_title = 'Input';
 num_lines = 1;
-defaultans = {'0708','b123','1','70.6','39.5','145'};
+defaultans = {'0716','b123','1','70.6','39.5','145'};
 answer = inputdlg(prompt,dlg_title,num_lines,defaultans);
 cfg.Date = answer{1};
 cfg.SubCode = answer{2};
@@ -57,7 +57,7 @@ end
 %%%%%
 expdate_all = clock;
 expdate = [num2str(expdate_all(1)) cfg.Date];
-datafilename = [resultsDir filesep 'OF_' expdate '_' cfg.SubCode '.mat'];
+datafilename = [resultsDir filesep 'FA_' expdate '_' cfg.SubCode '.mat'];
 if exist(datafilename,'file') && ~cfg.debugmode
     error('The data file exists! Please enter a different subject name.');
 end
@@ -94,7 +94,7 @@ escKey = KbName('Q');
 eyeused = {'LEFT_EYE';'RIGHT_EYE'};
 eyeused_id = 1;
 cfg.el.Eyeused = eyeused{eyeused_id}; 
-cfg.el.edffile = [cfg.Date cfg.SubCode '.edf']; %EDF filename
+cfg.el.edffile = ['FA_' cfg.SubCode '.edf']; %EDF filename
 
 %%%%%%=====Eyelink Initialization
 if cfg.el.eyelink
@@ -150,13 +150,13 @@ Para.ifi = ifi;
 
 %%%%%%%%%%%%%%%%%%%%%%%%=================Stimuli settings=================%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %screen setup
-cfg.WordSpace = 0.316; %% unit in visual angle, equal space between each word;
+cfg.WordSpace = 0.28; %% unit in visual angle, equal space between each word;
 WordSpace = usrDeg2Pix(cfg.WordSpace,cfg);
 cfg.WordStart = 4*cfg.WordSpace; %% unit in visual angle, the start point of sentence
 WordStart = usrDeg2Pix(cfg.WordStart,cfg);
 cfg.TextStyle = 1;                  %0=normal,1=bold,2=italic,4=underline,8=outline,32=condense,64=extend.
 cfg.TextFont = 'Courier New';
-cfg.TextSize = 20;  %20--0.316; %22-0.3556; 24--0.3951 
+cfg.TextSize = 20;  %22--0.32; %22-0.3556; 24--0.3951
 cfg.TextColor = [0 0 0];
 
 %%%Timing
@@ -176,18 +176,18 @@ yCoords = [0 0 -fixCrossDimPix fixCrossDimPix];
 CrossCoords = [xCoords; yCoords];
 
 %%%%%%====== load in Stimulus matrix
-load(['SentMat_' cfg.SentVers]) %% SentMat
-load(['TargCondPair_' cfg.SentVers])  %% TargCondPair
-load(['Question_' cfg.SentVers])  %% Question
+load(['FA_SentMat_' cfg.SentVers]) %% SentMat
+load(['FA_TargLoc_Cond_' cfg.SentVers])  %% TargLoc_Cond
+load FA_Question.mat %% Question
 % parameteres for the reading paradigm
 NumSent = size(SentMat,1);   %% number of sentences in the whole sheet1
-FlkWords = TargCondPair(:,1); %% location of the tagging word1
+FlkWords = [TargLoc_Cond(:,1) TargLoc_Cond(:,2)]; %% location of the tagging word1
 Para.SentMat = SentMat;
 Para.FlkWords = FlkWords;
-Para.TargCondPair = TargCondPair;
+Para.TargLoc_Cond = TargLoc_Cond;
 
 % condition matrix
-CondMat = TargCondPair; %%[location condition]
+CondMat = TargLoc_Cond; %%[location condition]
 %save in cfg
 Para.CondMat = CondMat;
 %total nr of trials per block
@@ -647,8 +647,12 @@ for i = 1:nTrials
     
     %%% flickering target for fixations of non-target
     bcgheight = round(TxtXcoord(FlkWords(i,1)+1)-TxtXcoord(FlkWords(i,1)));
-    id_wrd = FlkWords(i,1);
-    [woff_tar, mask_tar,rect4offscreen_tar] = DrawFlicker(TxtXcoord, id_wrd, bcgheight,cfg,TextureBox1,WordSpace);
+    id_wrd = FlkWords(i,[1 2]);
+    [woff_tar, mask_tar,rect4offscreen_tar] = DrawFlicker(TxtXcoord, id_wrd(1), bcgheight,cfg,TextureBox1,WordSpace);
+    % word freq sentences with two targets
+    [woff_tar_2,mask_tar_2,rect4offscreen_tar_2] = DrawFlicker(TxtXcoord, id_wrd(2), bcgheight,cfg,TextureBox1,WordSpace);
+    [woff_pos, mask_pos,rect4offscreen_pos] = DrawFlicker(TxtXcoord, id_wrd(1)+1, bcgheight,cfg,TextureBox1,WordSpace);
+    [woff_pos_2,mask_pos_2,rect4offscreen_pos_2] = DrawFlicker(TxtXcoord, id_wrd(2)+1, bcgheight,cfg,TextureBox1,WordSpace);
     
     %%% recording eye-movement coordinates
     Result.WordLocation(i,1:NumWord,1) = TxtXcoord; %% x-start
@@ -658,12 +662,25 @@ for i = 1:nTrials
     Result.WordLocation(i,1:NumWord,2) = ys.*ones(1,NumWord);
     Result.WordLocation(i,1:NumWord,4) = ye.*ones(1,NumWord);
     
+    %%% x boundaries for gaze-contingent RIFT for word freq sentences
+    %%% fixated means x is in the [x_start-space x_end]
+    eye_fix_Xcoord = TxtXcoord - WordSpace;
+    fix_X_tar_1 = [eye_fix_Xcoord(id_wrd(1)) eye_fix_Xcoord(id_wrd(1)+1)].*2;
+    fix_X_tar_2 = [eye_fix_Xcoord(id_wrd(2)) eye_fix_Xcoord(id_wrd(2)+1)].*2;
+    y_lim = ye.*2 + 30; % just add a random distance from ye
+    
+    
     %%%%%========= frames loops in each trial
     KbReleaseWait;  %%%  make sure no key unreleased in debugc
     ppp = 1; %%% index to send trigger
     j = 1; %% index of the frames to change the frequency table in each frame
     fff = 1;
     while fff <= round(cfg.gaze_end/ifi) %% word frames during one trial
+        % initializing the tagging offscreen
+        tag_tar = 0;
+        tag_tar_2 = 0;
+        tag_pos = 0;
+        tag_pos_2 = 0;
         %get position of the current fixaiton
         if cfg.el.eyelink
             sample = Eyelink('NewestFloatSample');
@@ -678,15 +695,60 @@ for i = 1:nTrials
                 % xy position of eye
                 Screen('FrameOval', window, [255 0 0], [x/2-8 y/2-8 x/2+8 y/2+8],3);
             end
-         end
-         
+            %%% decide where is the fixation
+            if y < y_lim
+                if sample.pa(1)>0
+                    if  x<=fix_X_tar_1(1)
+                        tag_tar = 1;
+                    elseif x>fix_X_tar_1(1) && x<fix_X_tar_1(2)
+                        tag_pos = 1;
+                    elseif x>=fix_X_tar_1(2) && x<=fix_X_tar_2(1)
+                        tag_tar = 1; tag_tar_2 = 1;
+                    elseif x>fix_X_tar_2(1) && x<fix_X_tar_2(2)
+                        tag_pos_2 = 1;
+                    else
+                        tag_tar_2 = 1;
+                    end
+                end
+            end
+        else
+            %%% randomly tag target or post-target if eye-tracker is off
+            if mod(i,5) == 0
+                tag_tar = 1;
+            elseif mod(i,5) == 1
+                tag_pos = 1;
+            elseif mod(1,5) == 2
+                tag_tar = 1; tag_tar_2 = 1;
+            elseif mod(1,5) == 3
+                tag_pos_2 = 1;
+            else
+                tag_tar_2 = 1;
+            end
+        end
+        
         %%% put sentences onscreen
         for q = 1:4 %for all quadrants
             %%% colormat
             tag_color = [cur_freqTable(1,(((j-1)*12)+q)), cur_freqTable(1,(((j-1)*12)+q+4)),  cur_freqTable(1,(((j-1)*12)+q+8))];
+          if tag_tar 
             %%% flicking target during pretarget fixation
             Screen('DrawTexture', window, woff_tar,[], q_rects(q,:),0, [], 1, tag_color);
             Screen('DrawTexture', window, mask_tar,[], rect4offscreen_tar+[q_rects(q,1) q_rects(q,2) q_rects(q,1) q_rects(q,2)]);
+          end
+          if tag_tar_2
+              %%% flicking target during target fixation
+              Screen('DrawTexture', window, woff_tar_2,[], q_rects(q,:),0, [], 1, tag_color);
+              Screen('DrawTexture', window, mask_tar_2,[], rect4offscreen_tar_2+[q_rects(q,1) q_rects(q,2) q_rects(q,1) q_rects(q,2)]);
+          end
+          if tag_pos
+            %%% flicking target during pos-target fixation
+            Screen('DrawTexture', window, woff_pos,[], q_rects(q,:),0, [], 1, tag_color);
+            Screen('DrawTexture', window, mask_pos,[], rect4offscreen_pos+[q_rects(q,1) q_rects(q,2) q_rects(q,1) q_rects(q,2)]);
+          end
+          if tag_pos_2
+            Screen('DrawTexture', window, woff_pos_2,[], q_rects(q,:),0, [], 1, tag_color);
+            Screen('DrawTexture', window, mask_pos_2,[], rect4offscreen_pos_2+[q_rects(q,1) q_rects(q,2) q_rects(q,1) q_rects(q,2)]);
+          end
             %%% draw all words
             colortmp1 = cfg.TextColor;
             Screen('DrawTexture', window, woff1,[], q_rects(q,:),0, [], 1, colortmp1);
@@ -774,6 +836,12 @@ for i = 1:nTrials
     Screen('Close', woff1) 
     Screen('Close', woff_tar)
     Screen('Close', mask_tar)
+    if ~isnan(id_wrd(2))
+        Screen('Close', woff_tar_2)
+        Screen('Close', mask_tar_2)
+        Screen('Close', woff_pos)
+        Screen('Close', mask_pos)
+    end
     
     %%%%%%%%%%%%%%%%%%%% ============ 4. probe questions  ============ %%%%%%%%%%%%%%%%%%%%
     KbReleaseWait; 
@@ -809,13 +877,13 @@ for i = 1:nTrials
             end
             if pressed
                 if ~cfg.debugmode  %% NaTA box
-                    if (strcmp(Question{i,2},'T') && KeyCode == cfg.keyLeft) || (strcmp(Question{i,2},'F') && KeyCode == cfg.keyRight)
+                    if (strcmp(Question{i,2},'Y') && KeyCode == cfg.keyLeft) || (strcmp(Question{i,2},'N') && KeyCode == cfg.keyRight)
                         Result.CORR(i) = 1;
                     else
                         Result.CORR(i) = 0;
                     end
                 else  %% keyboard 
-                    if (strcmp(Question{i,2},'T') && KeyCode(leftKey)) || (strcmp(Question{i,2},'F') && KeyCode(rightKey))
+                    if (strcmp(Question{i,2},'Y') && KeyCode(leftKey)) || (strcmp(Question{i,2},'N') && KeyCode(rightKey))
                         Result.CORR(i) = 1;
                     else
                         Result.CORR(i) = 0;

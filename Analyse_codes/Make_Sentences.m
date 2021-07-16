@@ -210,8 +210,8 @@ cond_id_V2 = [12.*ones(length(SV_Sentmat_V1)/2,1);11.*ones(length(SV_Sentmat_V1)
               22.*ones(length(WF_Sentmat_V1)/2,1);21.*ones(length(WF_Sentmat_V1)/2,1)];
 % randeromazation
 randid = randperm(length(All_Sentmat_V1))';
-Sentmat_V1 = All_Sentmat_V1(randid,:);
-Sentmat_V2 = All_Sentmat_V2(randid,:);
+SentMat_1 = All_Sentmat_V1(randid,:);
+SentMat_2 = All_Sentmat_V2(randid,:);
 Cond_V1 = cond_id_V1(randid);
 Cond_V2 = cond_id_V2(randid);
 Rand_Target_ID = targid_all(randid,:);
@@ -245,15 +245,137 @@ save('U:\Projects\Semantic_Parafoveal_Reading\SentMat_all.mat','SentMat_all');
 
 % for PTB, needs: Sentmat_V1/2, Cond_V1/2, Rand_Target_ID
 cd Z:\Semantic\PTB_codes\
-Sentmat = Sentmat_V1;
-save Sentmat_V1 Sentmat
-Sentmat = Sentmat_V2;
-save Sentmat_V2 Sentmat
+SentMat = SentMat_1;
+save SentMat_1 SentMat
+SentMat = SentMat_2;
+save SentMat_2 SentMat
 save Question Question
 TargLoc_Cond = [Rand_Target_ID Cond_V1];
 save TargLoc_Cond_V1 TargLoc_Cond
 TargLoc_Cond = [Rand_Target_ID Cond_V2];
 save TargLoc_Cond_V2 TargLoc_Cond
+
+
+
+%% 20210716: select word_freq sentences out of the semantiv task, put orth_freq sentences in as fillers
+load('SentMat_2.mat')
+load('TargLoc_Cond_2.mat')
+sv_2_id = TargLoc_Cond(:,3)<20;
+sentmat_sv_2 = SentMat(sv_2_id,:);
+wf_2_id = TargLoc_Cond(:,3)>20;
+sentmat_wf_2 = SentMat(wf_2_id,:);
+cond_sv_2 = TargLoc_Cond(sv_2_id,:);
+cond_wf_2 = TargLoc_Cond(wf_2_id,:);
+Question_sv = Question(sv_2_id,:);
+Question_wf = Question(wf_2_id,:);
+
+%%
+SentMat = sentmat_wf_1;
+TargLoc_Cond = cond_wf_1;
+save FA_SentMat_1 SentMat
+save FA_TargLoc_Cond_1 TargLoc_Cond
+%%
+SentMat = sentmat_wf_2;
+TargLoc_Cond = cond_wf_2;
+save FA_SentMat_2 SentMat
+save FA_TargLoc_Cond_2 TargLoc_Cond
+%% 
+Question = Question_wf;
+save FA_Question Question
+
+%
+allid = allid == 1;
+cond_sv_1 = cond_sv_1(:,[1 3 2]);
+cond_sv_2 = cond_sv_2(:,[1 3 2]);
+
+%%
+allsent_1 = cell(277,17);
+cond_1 = zeros(277,3);
+question_1 = cell(277,2);
+
+allsent_1(allid,:) = sentmat_sv_1;
+cond_1(allid,:) = cond_sv_1;
+question_1(allid,:) = Question_sv;
+
+allsent_1(~allid,1:16) = sentmat_of_1;
+cond_1(~allid,:) = TargCondPair_of_1;
+question_1(~allid,:) = Question_of_1;
+
+%
+allsent_2 = cell(277,17);
+cond_2 = zeros(277,3);
+question_2 = cell(277,2);
+
+allsent_2(allid,:) = sentmat_sv_1;
+cond_2(allid,:) = cond_sv_1;
+question_2(allid,:) = Question_sv;
+
+allsent_2(~allid,1:16) = sentmat_of_2;
+cond_2(~allid,:) = TargCondPair_of_2;
+question_2(~allid,:) = Question_of_2;
+
+%
+allsent_3 = cell(277,17);
+cond_3 = zeros(277,3);
+question_3 = cell(277,2);
+
+allsent_3(allid,:) = sentmat_sv_1;
+cond_3(allid,:) = cond_sv_1;
+question_3(allid,:) = Question_sv;
+
+allsent_3(~allid,1:16) = sentmat_of_3;
+cond_3(~allid,:) = TargCondPair_of_3;
+question_3(~allid,:) = Question_of_3;
+
+%
+allsent_4 = cell(277,17);
+cond_4 = zeros(277,3);
+question_4 = cell(277,2);
+
+allsent_4(allid,:) = sentmat_sv_2;
+cond_4(allid,:) = cond_sv_2;
+question_4(allid,:) = Question_sv;
+
+allsent_4(~allid,1:16) = sentmat_of_1;
+cond_4(~allid,:) = TargCondPair_of_1;
+question_4(~allid,:) = Question_of_1;
+
+%
+allsent_5 = cell(277,17);
+cond_5 = zeros(277,3);
+question_5 = cell(277,2);
+
+allsent_5(allid,:) = sentmat_sv_2;
+cond_5(allid,:) = cond_sv_2;
+question_5(allid,:) = Question_sv;
+
+allsent_5(~allid,1:16) = sentmat_of_2;
+cond_5(~allid,:) = TargCondPair_of_2;
+question_5(~allid,:) = Question_of_2;
+
+%
+allsent_6 = cell(277,17);
+cond_6 = zeros(277,3);
+question_6 = cell(277,2);
+
+allsent_6(allid,:) = sentmat_sv_2;
+cond_6(allid,:) = cond_sv_2;
+question_6(allid,:) = Question_sv;
+
+allsent_6(~allid,1:16) = sentmat_of_3;
+cond_6(~allid,:) = TargCondPair_of_3;
+question_6(~allid,:) = Question_of_3;
+
+%%
+for i = 1:6
+    eval(['SentMat = allsent_' num2str(i) ';']);
+    eval(['TargCondPair = cond_' num2str(i) ';']);
+    eval(['Question = question_' num2str(i) ';']);
+    save(['SentMat_' num2str(i)], 'SentMat')
+    save(['TargCondPair_' num2str(i)], 'TargCondPair')
+    save(['Question_' num2str(i)], 'Question')
+end
+
 
 
 

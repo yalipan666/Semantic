@@ -51,9 +51,6 @@ Eyelink('Command', 'saccade_velocity_threshold = 30');
 Eyelink('Command', 'saccade_acceleration_threshold = 8000');
 
 % Other tracker configurations
-%%% enable eye drift checking
-Eyelink('Command', 'driftcorrect_cr_disable = NO');
-
 
 %% these might crash:
 
@@ -73,6 +70,9 @@ Eyelink('Command', 'binocular_enabled = NO');
 Eyelink('Command', 'use_ellipse_fitter = NO');
 Eyelink('Command', 'sample_rate = 1000');
 %Eyelink('Command', 'elcl_tt_power = %d', 2); % illumination, 1 = 100%, 2 = 75%, 3 = 50%
+
+%%% enable eye drift checking
+Eyelink('Command', 'driftcorrect_cr_disable = NO');
 
 switch cfg.el.Eyeused
     case 'RIGHT_EYE'

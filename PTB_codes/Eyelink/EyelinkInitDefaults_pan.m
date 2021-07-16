@@ -63,7 +63,7 @@ if ~isempty(window)
 %     el.imgtitlecolour   = BlackIndex(el.window);
     %%% YPan: change to the same screen setting as in exp
     el.backgroundcolour = cfg.ScrBgc;
-	el.foregroundcolour = cfg.TextColor;
+	  el.foregroundcolour = cfg.TextColor;
     el.msgfontcolour    = cfg.TextColor;
     el.imgtitlecolour   = cfg.TextColor;
     

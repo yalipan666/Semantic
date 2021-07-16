@@ -1,4 +1,4 @@
-function cfg = el_Start_SameWindow(cfg)
+function cfg = el_Start(cfg)
 % Used in FG experiment
 % Open screen for calibration, calibrate and start recording
 
@@ -11,6 +11,7 @@ function cfg = el_Start_SameWindow(cfg)
     %window=Screen('OpenWindow', cfg.screenNumber, [] ,cfg.el_rect);
 %     cfg.window=Screen('OpenWindow', cfg.screenNumber);
     
+    
     % STEP 2
     % Provide Eyelink with details about the graphics environment
     % and perform some initializations. The information is returned
@@ -20,7 +21,7 @@ function cfg = el_Start_SameWindow(cfg)
     cfg.el.defaults = EyelinkInitDefaults(cfg.window);
     
     % Disable key output to Matlab window:
-    ListenChar(2);
+    %ListenChar(2);
     
     % STEP 3
     % Initialization of the connection with the Eyelink Gazetracker.
@@ -34,8 +35,8 @@ function cfg = el_Start_SameWindow(cfg)
     end
     
     % open file to record data to
-    disp('Opening EDF file');
-    status = Eyelink('Openfile', cfg.el.edffile);
+    disp('Opening EDF file');   
+    status=Eyelink('Openfile', cfg.el.edffile);
     
     if ~status
         disp('EDF file opened on Eyelink computer')
@@ -45,34 +46,14 @@ function cfg = el_Start_SameWindow(cfg)
     
     % set custom parameters
     disp('Setting parameters')
-    cfg = el_Set_Params(cfg);
-     
+    cfg=el_Set_Params(cfg);
+        
+    % Calibrate the eye tracker
+    disp('Starting calibration')
+    EyelinkDoTrackerSetup(cfg.el.defaults);
     
-    %%% check eye tracker myself, run atuomatically, no need for key-pressing
-%     if cfg.CheckEyeMyself
-%         EyelinkDoTrackerSetup(cfg.el.defaults);
-%         % do a final check of calibration using driftcorrection
-%         EyelinkDoDriftCorrection_pan(cfg.el.defaults);
-      
-%         %%% change default function keys to NaTAbox value
-%         cfg.el.defaults.SPACE_BAR = KbName('4$');
-%         cfg.el.defaults.el.ESC_KEY = KbName('7&');
-%         %%% get eye image to adjust eyetracker position 
-%         EyelinkDoTrackerSetup(cfg.el.defaults,13); 
-%         %%% calibration
-%         EyelinkDoTrackerSetup(cfg.el.defaults,'c'); 
-%         %%% validation
-%         EyelinkDoTrackerSetup(cfg.el.defaults,'v');
-%         %%% drift correction
-%         EyelinkDoDriftCorrection(el);
-%     else
-        % Calibrate the eye tracker
-        disp('Starting calibration')
-        EyelinkDoTrackerSetup(cfg.el.defaults);
-        % do a final check of calibration using driftcorrection
-%         EyelinkDoDriftCorrection(cfg.el.defaults);
-%     end
-    
+    % do a final check of calibration using driftcorrection
+    %     EyelinkDoDriftCorrection(el);
     
     % STEP 5
     % start recording eye position

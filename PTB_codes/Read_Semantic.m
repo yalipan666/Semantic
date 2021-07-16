@@ -22,8 +22,8 @@ if cfg.debugmode
     Screen('Preference', 'SkipSyncTests', 1); %must be 0 during experiment
     cfg.el.eyelink = 0;              %eyelink on/off
     cfg.el.override = 1;          %No eyelink in actual experiment, use only in case of fault
-    cfg.DataPixxOnly = 0;      %for rapidmode testing without triggers with propixx
-    tt = 0.1;
+    cfg.DataPixxOnly = 1;      %for rapidmode testing without triggers with propixx
+    tt = 0.01;
 else
     Screen('Preference', 'SkipSyncTests', 0); %must be 0 during experiment
     cfg.el.eyelink = 1;              %eyelink on/off
@@ -57,7 +57,7 @@ end
 %%%%%
 expdate_all = clock;
 expdate = [num2str(expdate_all(1)) cfg.Date];
-datafilename = [resultsDir filesep 'OF_' expdate '_' cfg.SubCode '.mat'];
+datafilename = [resultsDir filesep expdate '_' cfg.SubCode '.mat'];
 if exist(datafilename,'file') && ~cfg.debugmode
     error('The data file exists! Please enter a different subject name.');
 end
@@ -193,8 +193,8 @@ Para.CondMat = CondMat;
 %total nr of trials per block
 nTrials = size(CondMat,1);
 Para.nTrials = nTrials;
-n_block = 3;
-Para.BreakTrials = round(nTrials/n_block); %How many trials between breaks?
+n_block = 5;
+Para.BreakTrials = ceil(nTrials/n_block); %How many trials between breaks?
 
 %Calculate the stimulus centers
 xPos=resx/4;
@@ -785,7 +785,7 @@ for i = 1:nTrials
         Screen('TextFont', window, cfg.TextFont);
         Screen('TextSize', window, cfg.TextSize);
         Screen('TextStyle',window, cfg.TextStyle);
-        message = [probe '\n\n\n\n\n\n Ture: Right index; \n\n False: Right middle'];
+        message = [probe '\n\n\n\n\n\n True: Right index; \n\n False: Right middle'];
         for q = 1 :4
             [~,~,~] = DrawFormattedText(window,message,q_rects(q,1)+ WordStart, 'center' ,cfg.TextColor,[],[],[],[],[],q_rects(q,:));
         end

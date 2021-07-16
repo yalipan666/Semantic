@@ -1,4 +1,4 @@
-function cfg = el_Start_SameWindow(cfg)
+function cfg = el_Start_SameWindow_D(cfg)
 % Used in FG experiment
 % Open screen for calibration, calibrate and start recording
 
@@ -33,15 +33,15 @@ function cfg = el_Start_SameWindow(cfg)
         disp('Eyelink initizalized')
     end
     
-    % open file to record data to
-    disp('Opening EDF file');
-    status = Eyelink('Openfile', cfg.el.edffile);
-    
-    if ~status
-        disp('EDF file opened on Eyelink computer')
-    else
-        error(['Could not open EDF file on Eyelink computer, error: ' int2str(status)])
-    end
+%     % open file to record data to
+%     disp('Opening EDF file');
+%     status = Eyelink('Openfile', cfg.el.edffile);
+%     
+%     if ~status
+%         disp('EDF file opened on Eyelink computer')
+%     else
+%         error(['Could not open EDF file on Eyelink computer, error: ' int2str(status)])
+%     end
     
     % set custom parameters
     disp('Setting parameters')
@@ -68,14 +68,14 @@ function cfg = el_Start_SameWindow(cfg)
 %     else
         % Calibrate the eye tracker
         disp('Starting calibration')
-        EyelinkDoTrackerSetup(cfg.el.defaults);
+%         EyelinkDoTrackerSetup(cfg.el.defaults);
         % do a final check of calibration using driftcorrection
-%         EyelinkDoDriftCorrection(cfg.el.defaults);
+         EyelinkDoDriftCorrection(cfg.el.defaults);
 %     end
     
     
     % STEP 5
-    % start recording eye position
+    start recording eye position
     disp('Start recording')
     %sca
     Eyelink('StartRecording');
@@ -84,7 +84,7 @@ function cfg = el_Start_SameWindow(cfg)
     % mark zero-plot time in data file
     disp('Sending message')
     Eyelink('Message', 'SYNCTIME');
-    
+%     
     %sca
     ListenChar(0);    
 % catch

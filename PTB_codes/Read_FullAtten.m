@@ -57,7 +57,7 @@ end
 %%%%%
 expdate_all = clock;
 expdate = [num2str(expdate_all(1)) cfg.Date];
-datafilename = [resultsDir filesep 'FA_' expdate '_' cfg.SubCode '.mat'];
+datafilename = [resultsDir filesep 'fa_' expdate '_' cfg.SubCode '.mat'];
 if exist(datafilename,'file') && ~cfg.debugmode
   error('The data file exists! Please enter a different subject name.');
 end
@@ -94,7 +94,7 @@ escKey = KbName('Q');
 eyeused = {'LEFT_EYE';'RIGHT_EYE'};
 eyeused_id = 1;
 cfg.el.Eyeused = eyeused{eyeused_id};
-cfg.el.edffile = ['FA_' cfg.SubCode '.edf']; %EDF filename
+cfg.el.edffile = ['fa_' cfg.SubCode '.edf']; %EDF filename
 
 %%%%%%=====Eyelink Initialization
 if cfg.el.eyelink

@@ -1,0 +1,32 @@
+% set up triggers
+cfg.TriggerFix = 1;   % fixation onset
+cfg.TriggerStartBox = 2; % start box onset
+cfg.TriggerSentOn = 4;   %  sentence onset
+cfg.TriggerSentOff = 8;  % sentence offset
+cfg.TriggerITI = 16;   % ITI onset
+cfg.TriggerOpenEye = 64;   
+cfg.TriggerCloseEye = 128;  
+cfg.TriggerPureTagOn = 32;   % tagging on in the pure tagging task
+
+% Timing
+cfg.fix_t = 1.2;%Duration (s) of the fixation
+cfg.fix_jitter = 0.4; %Baseline jitter
+cfg.iti = 0.5; %intertrial interval
+cfg.rest = 30; % rest time between blocks
+cfg.fedbk = 1;
+
+% pre-processing
+cfg.detrend  = 'yes';
+cfg.bpfilter = 'yes';
+cfg.bpfreq   = [0.5 100];
+
+% ICA
+first downsampling data to 200Hz
+The data will be decomposed into components, the number of components is the same as the number of (good) meg sensors (306 or less)
+Training will end when wchange < 1e-07 or after 100 steps.
+We only remove bad components from the top 30 components with the highest weight.
+
+% epochs
+fixation duration range: [80 1000]ms
+epoch: [-500 500]ms aligned with fixation onset to a given word
+baseline: [0 1000]ms, aligned with cross onset

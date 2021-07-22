@@ -1,7 +1,7 @@
 %%% edit: Yali Pan, 20210706, Just a quick check of the tag signal
 
 %%% get sub_information
-subjects = {'20210625_b4d4';'20210702_b4bb';'20210702_b5f3'};
+subjects = {'20210716_b5e6'};
 tasks = {'all','sv','wf'};
 %%%% addpath fieldtrip
 addpath Z:\fieldtrip-20200220\

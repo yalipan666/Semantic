@@ -1,5 +1,9 @@
-% 20210720 pre-processing data on server, until get ica
-function PreProcessing_new(sss)
+% copy from Lexical/Analyse_codes
+% 20210719 clear functions to make scripts more concise
+% 20210720 pre-processing data on bluebear: get raw megdata, eyedata, event,
+% ica components
+
+function PreProcessing(sss)
 ddd = 3;
 
 %%% set paths

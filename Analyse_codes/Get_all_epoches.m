@@ -1,7 +1,9 @@
 % copy from Lexical/Analyse_codes
 % 20210719 clear functions to make scripts more concise
+% remove artefcts based on ica components, get all kinds of epochs based on
+% event
 
-function Get_all_epoches_new(server,ddd,sss)
+function Get_all_epoches(server,ddd,sss)
 
 %%% set paths
 if server

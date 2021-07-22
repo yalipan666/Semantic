@@ -1,6 +1,7 @@
 % 20210720 pre-processing data on server, until get ica
-function PreProcessing(sss)
-ddd = 1;
+function PreProcessing_new(sss)
+ddd = 3;
+
 %%% set paths
 server = 1;
 if server
@@ -18,14 +19,13 @@ PPath.RawPTB = [rootdir 'RawData' filesep 'PTB_data' filesep];
 PPath.RawEye = [rootdir 'RawData' filesep 'EyeLink_data' filesep];
 
 %%% settings for pre-processing
-PPara.SR         = 1000;
 PPara.bpfilter   = 'yes';
 PPara.bpfreq     = [0.5 100];
 PPara.detrend    = 'yes';
-PPara.cutlen4ica = 2^(nextpow2(4*PPara.SR));%random length for epoching in ica
+PPara.SR         = 1000;
 
 %%% get file names
-DataSets = {'sv','fa','of'};
+DataSets = {'sv','of','fa'};
 DS = DataSets{ddd};
 load([rootdir 'Analyse_data' filesep 'ExpInfo.mat']);
 eval(['subjects = ExpInfo.subjects.' DS ';']);
@@ -62,25 +62,14 @@ else
     load([PPath.SaveData 'Trigger_MEG']);
 end
 
-
-%%%% change pd signal 
-if ddd == 1 && sss < 6
-    tg_senton = Trigger_MEG(:,1) == ExpInfo.Trigger.SentOn;
-    tg_senton = [1; Trigger_MEG(tg_senton,2)];
-    for i = 1:length(tg_senton)-1
-        tmp = data(324,tg_senton(i):tg_senton(i+1));
-        tmp = tmp(4:4:end);
-        tmp = kron(tmp,ones(1,4));
-        diflen = length(tg_senton(i):tg_senton(i+1)) - length(tmp);
-        data(325,tg_senton(i):tg_senton(i+1)) = [tmp tmp(end).*ones(1,diflen)] ;
-    end
-end
-
-
 %% remove artefacts with ICA on server
+% just run ica for the exp data, excluding the hpi signal at the begining
+% and the end of exp
+PPara.icastart = Trigger_MEG(1,2);
+PPara.cutlen4ica = 2^(nextpow2(4*PPara.SR));%random length for epoching in ica
+PPara.icaend = Trigger_MEG(end,2)+PPara.cutlen4ica;
 [data4ICA, comp] = ICA4rawdata(PPara,hdr,data);
 save([PPath.SaveData 'ica.mat'],'data4ICA','comp','-v7.3')
-
 
 %% get eyemovement metrics from eyelink
 %first converting data from .edf to .asc (C:/toolbox/SR Research/edfconverter/)
@@ -90,9 +79,7 @@ WordLocMat = 2.*Result.WordLocation;
 EyeData = Get_EyeData(eyefile, WordLocMat,ExpInfo.Trigger);
 save([PPath.SaveData 'EyeData'],'EyeData');  
 
-
 %% get event
-load([PPath.SaveData 'Trigger_MEG']);
 load([PPath.RawPTB File.PTB],'Para'); % Para
 CondMat = Para.CondMat;
 Event = Get_Event(EyeData,CondMat,Trigger_MEG,ExpInfo.Trigger);

@@ -1,7 +1,7 @@
 % copy from Lexical/Analyse_codes
 % 20210719 clear functions to make scripts more concise
 
-function Get_all_epoches(server,ddd,sss)
+function Get_all_epoches_new(server,ddd,sss)
 
 %%% set paths
 if server
@@ -18,8 +18,8 @@ end
 RunCond = 'WrdOn'; %%'WrdOff';%%% epoch aligned with RunCond
 PPara.filename = RunCond;
 AnaTW = 1000;
-DataSets = {'sv','fa','of'};
-conds = {[11 12],[21 22],[1 2 3]};% condition mat for diff tasks
+DataSets = {'sv','of','fa'};
+conds = {[11 12],[1 2 3],[21 22]};% condition mat for diff tasks
 epoch_select = 'abs(PPara.event_all(:,3))<2'; %% select: n-1,n,n+1
 DoBaseline = 1; % get epochs for baseline period
 
@@ -78,7 +78,6 @@ delete([PPath.SaveData 'Trigger_MEG.mat'])
 delete([PPath.SaveData 'data.mat']);
 
 
-
 %% ================epoching
 load([PPath.SaveData 'Event'])
 %%% get trialinfo index
@@ -119,11 +118,11 @@ end
 eval(['ExpInfo.ValidTrlPerct.' DS '(sss,1) = ValidTrlPerct;']);
 
 %%% seperate epochs into 2 tasks and save them out
-if ddd == 1
+if ddd == 3 
+    save([PPath.SaveData 'epoch_' PPara.filename],'epoch','-v7.3');
+else %%% seperate epochs into 2 tasks and save them out
     epoch_all = epoch;
-    
     % first task
-    epoch = [];
     tmptrl = [];
     tmpc = conds{1};
     for ccc = 1:length(tmpc)
@@ -136,7 +135,6 @@ if ddd == 1
     save([PPath.SaveData 'epoch_' PPara.filename],'epoch','-v7.3');
     
     % second task
-    epoch = [];
     tmptrl = [];
     tmpc = conds{2};
     for ccc = 1:length(tmpc)

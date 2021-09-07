@@ -2,24 +2,21 @@
 % 20210719 clear functions to make scripts more concise
 
 function [hdr,data,Trigger_MEG] = Get_MEGData(PPath,File)
-%%% read in two MEG datasets
 nfif = length(File.MEG);
+data = [];
+Trigger_MEG = [];
+meg_len = [];
 for p = 1:nfif
     cfg.dataset = [PPath.RawMEG File.MEG{p}];
-    eval(['data'  num2str(p) '= ft_read_data(cfg.dataset);']);
+    %%% read in multiple MEG datasets
+    data_tmp = ft_read_data(cfg.dataset);
     event = ft_read_event(cfg.dataset);
-    Trigger_MEG = [[event(strcmp('Trigger',{event.type})).value]' [event(strcmp('Trigger',{event.type})).sample]'];
-    eval(['Trigger_MEG' num2str(p) '= Trigger_MEG;']);
-end
-if nfif == 2 % concatenating 2 datasets
-    data_length_1 = size(data1,2);
-    Trigger_MEG = [Trigger_MEG1; [Trigger_MEG2(:,1) Trigger_MEG2(:,2)+data_length_1]];
-    data = [data1 data2];
-    clear data1 data2
-else
-    data = data1; 
-    clear data1
-    Trigger_MEG = Trigger_MEG1;
+    trig_tmp = [[event(strcmp('Trigger',{event.type})).value]' [event(strcmp('Trigger',{event.type})).sample]'];
+    % concatenating multiple datasets
+    add_last_len = sum(meg_len); % adding the data_length from the last .fif file
+    meg_len = [meg_len size(data_tmp,2)];
+    data = [data data_tmp];
+    Trigger_MEG = [Trigger_MEG; [trig_tmp(:,1) trig_tmp(:,2)+add_last_len]];
 end
 hdr =  ft_read_header([PPath.RawMEG File.MEG{1}]);
 

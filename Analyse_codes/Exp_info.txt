@@ -30,3 +30,11 @@ We only remove bad components from the top 30 components with the highest weight
 fixation duration range: [80 1000]ms
 epoch: [-500 500]ms aligned with fixation onset to a given word
 baseline: [0 1000]ms, aligned with cross onset
+
+% ERF
+lowpass filter: 35Hz
+demean: yes
+baseline correction: [-0.2 0]
+
+
+

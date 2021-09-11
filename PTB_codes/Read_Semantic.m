@@ -35,13 +35,13 @@ end
 % Input dialog
 prompt = {'Exp date:', ...
     'Subject code:', ...
-    'Sentence version:',...
+    'Sentence version(1,2,3,4,5,6):',...
     'Screen width (cm): ', ...
     'Screen height (cm): ', ...
     'Screen distance (cm): '};
 dlg_title = 'Input';
 num_lines = 1;
-defaultans = {'0708','b123','1','70.6','39.5','145'};
+defaultans = {'0911','b123','2','70.6','39.5','145'};
 answer = inputdlg(prompt,dlg_title,num_lines,defaultans);
 cfg.Date = answer{1};
 cfg.SubCode = answer{2};
@@ -493,9 +493,11 @@ for i = 1:nTrials
     end
     
     
-    %%%%%%======= do a final check of calibration using driftcorrection
-    if (cfg.el.eyelink && mod(i,3)==1) || (cfg.el.eyelink && mod(i,Para.BreakTrials)==1)
+    %%%%%%======= do drift correction
+    if  cfg.el.eyelink && i ~= 1
+      if mod(i,3)==1 || mod(i,Para.BreakTrials)==1
         el_calib_valid(cfg,2); % run EyelinkDoDriftCorrection
+      end
     end
     Screen('Flip', window);
     WaitSecs(0.3)

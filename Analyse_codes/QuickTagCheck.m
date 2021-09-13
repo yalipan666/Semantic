@@ -1,8 +1,7 @@
 %%% edit: Yali Pan, 20210706, Just a quick check of the tag signal
 
 %%% get sub_information
-subjects = {'20210716_b5e6'};
-tasks = {'all','sv','wf'};
+subjects = {'20210911_b3f9'};
 %%%% addpath fieldtrip
 addpath Z:\fieldtrip-20200220\
 ft_defaults
@@ -12,7 +11,7 @@ path_meg = [rootdir 'RawData\MEG_data\'];
 path_ptb = [rootdir 'RawData\PTB_data\'];
 figpath = [rootdir 'Results' filesep 'Topo_tagging' filesep];
 
-for sss = length(subjects)
+for sss = 1:length(subjects)
     sub = subjects{sss};
     %%% file parameters
     filename = sub(10:13);
@@ -21,11 +20,10 @@ for sss = length(subjects)
     megpath = [path_meg sub filesep filedate filesep];
     dataset = [megpath filename];
     trig_value = 4;
-    posttrig = 3; % length of epoch
+    posttrig = 2; % length of epoch
     
     %%% 1Hz freq step
     tagfreq = 60;
-    freqrange = 55:65;
     pretrig = 0;
     SR = 1000; %% sampling rate
     pretrig = pretrig*SR;
@@ -60,7 +58,6 @@ for sss = length(subjects)
     %%Step-1: define trials mannually, epoch aligned with sentence_onset
     Trigger_MEG_cond = Trigger_MEG(Trigger_MEG(:,1)==trig_value,:);
     % define trials manually
-    load([path_ptb sub]) % get condition mat from PTB; [11 12]-SV [incon con], [21 22]--WF [low high]
     trlidx = 0;
     epoch = [];
     for j = 1:length(Trigger_MEG_cond)
@@ -68,9 +65,9 @@ for sss = length(subjects)
         trlend       = Trigger_MEG_cond(j,2) + posttrig;
         trlidx       = trlidx +1;
         epoch.trial{trlidx}        = data(:,trlbegin:(trlend-1));
-        epoch.time{trlidx}         = (pretrig:(posttrig-1))\SR;
+        epoch.time{trlidx}         = (pretrig:(posttrig-1))/SR;
         epoch.trl(trlidx,:)        = [trlbegin trlend pretrig Trigger_MEG_cond(j,2)];
-        epoch.trialinfo(trlidx,:)  =  Para.TargLoc_Cond(j,3);
+        epoch.trialinfo(trlidx,:)  = Trigger_MEG_cond(j,2);
     end
     clear data
     
@@ -83,57 +80,46 @@ for sss = length(subjects)
     %%% trials in epoch_cond is wrong, so replace them with epoch.trial
     epoch_all.trial = epoch.trial;
     epoch_all.time = epoch.time;
-    epoch_all.trialinfo = epoch.trialinfo;
     clear epoch
     
-    %% step-3 seperate trls based on tasks and do coherence seperately
-    cfg        = [];
-    cfg.trials = epoch_all.trialinfo<20;
-    epoch_sv   = ft_selectdata(cfg, epoch_all);
-    cfg.trials = epoch_all.trialinfo>20;
-    epoch_wf   = ft_selectdata(cfg, epoch_all);
+    %%%======= get fourier spctrm
+    cfg         = [];
+    cfg.output  = 'fourier';
+    cfg.channel = {'MEGGRAD','MISC004'};
+    cfg.method  = 'mtmfft';
+    cfg.taper   = 'hanning';
+    cfg.foi     = 1:1:100;
+    fourier=ft_freqanalysis(cfg,epoch_all); %=% tfr.powspctrm:3D data: trialnum*channelnum*freqpoint
     
-    for t = 1:length(tasks)
-        %%%======= get fourier spctrm
-        cfg         = [];
-        cfg.output  = 'fourier';
-        cfg.channel = {'MEGGRAD',hdr.label{pd}};
-        cfg.method  = 'mtmfft';
-        cfg.taper   = 'hanning';
-        cfg.foi     = 1:1:100;
-        eval(['fourier=ft_freqanalysis(cfg,epoch_' tasks{t} ');']); %=% tfr.powspctrm:3D data: trialnum*channelnum*freqpoint
-        
-        %%% statistical test of coherence
-        %%%======= get coherence spctrm
-        cfg            = [];
-        cfg.method     = 'coh';
-        cfg.channelcmb = {'MEGGRAD',hdr.label{pd}}; %% all channell combinations calculated together
-        coh            = ft_connectivityanalysis(cfg, fourier);
-        
-        %%% combining the coherence of two gradiometers
-        cfg = [];
-        cfg.method = 'sum';
-        coh.powspctrm = coh.cohspctrm;
-        coh.label = fourier.label(1:length(coh.labelcmb));
-        coh.grad = hdr.grad;
-        coh_cmb = ft_combineplanar(cfg, coh); %cfg.method = 'sum' only works for frequency data with powspctrm
-        coh_cmb = rmfield(coh_cmb,'cohspctrm');
-        
-        %%%%%%%%%%%%%%%%% plot figures
-        %%% plot topograph
-        figtitle = ['Coh_60Hz_' tasks{t}];
-        freqx = tagfreq;
-        h = figure('color', [1 1 1],'name',['Topo_' figtitle],'position',[100 100 600 600]);
-        cfg = [];
-        cfg.layout = 'neuromag306cmb.lay';
-        cfg.xlim = [freqx freqx];
-        cfg.marker = 'numbers';
-        ft_topoplotER(cfg,coh_cmb);
-        colormap jet; colorbar;
-        title(['task--'  tasks{t}],'FontSize',16);
-        saveas(h,[figpath sub '_' figtitle],'bmp');
-    end
-        
+    %%% statistical test of coherence
+    %%%======= get coherence spctrm
+    cfg            = [];
+    cfg.method     = 'coh';
+    cfg.channelcmb = {'MEGGRAD','MISC004'}; %% all channell combinations calculated together
+    coh            = ft_connectivityanalysis(cfg, fourier);
+    
+    %%% combining the coherence of two gradiometers
+    cfg = [];
+    cfg.method = 'sum';
+    coh.powspctrm = coh.cohspctrm;
+    coh.label = fourier.label(1:length(coh.labelcmb));
+    coh.grad = hdr.grad;
+    coh_cmb = ft_combineplanar(cfg, coh); %cfg.method = 'sum' only works for frequency data with powspctrm
+    coh_cmb = rmfield(coh_cmb,'cohspctrm');
+    
+    %%%%%%%%%%%%%%%%% plot figures
+    %%% plot topograph
+    figtitle = 'Coh at 60Hz';
+    freqx = tagfreq;
+    h = figure('color', [1 1 1],'name',['Topo_' figtitle],'position',[100 100 600 600]);
+    cfg = [];
+    cfg.layout = 'neuromag306cmb.lay';
+    cfg.xlim = [freqx freqx];
+    cfg.marker = 'numbers';
+    ft_topoplotER(cfg,coh_cmb);
+    colormap jet; colorbar;
+    title(figtitle,'FontSize',16);
+    saveas(h,[figpath sub '_' figtitle],'bmp');
 end
 
 

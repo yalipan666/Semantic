@@ -366,7 +366,7 @@ end
 for f = 1:length(cfg.FreqMat)
   patch_frequency = cfg.FreqMat(f);
   patch_angFreq = 2 * pi * patch_frequency;
-  start_time=(cfg.fix_t+cfg.fix_jitter)*-1;
+  start_time=0;
   frametime=start_time:ifi/frame_mult:(max_trialframes*frame_mult)*(ifi/frame_mult)+start_time;
   frametime=frametime(1:max_trialframes*frame_mult);
   if cfg.Phaselock
@@ -389,7 +389,6 @@ end
 cfg.freqTable = freqTable;
 cfg.diodeTable1 = freqTable(dsearchn(cfg.FreqMat',f1),:);
 cfg.diodeTable2 = freqTable(dsearchn(cfg.FreqMat',f2),:);
-
 
 %calculate all permutation of phase differences. It is important to balance
 %the phase differences well to properly cancel out phase interference
@@ -677,6 +676,7 @@ for i = 1:nTrials
   ppp = 1; %%% index to send trigger
   j = 1; %% index of the frames to change the frequency table in each frame
   fff = 1;
+  tag_old = 0; %variable to indicate whether the tagging location has changed
   while fff <= round(cfg.gaze_end/ifi) %% word frames during one trial
     % initializing the tagging offscreen
     tag_tar = 0;
@@ -701,31 +701,38 @@ for i = 1:nTrials
       if y < y_lim
         if sample.pa(1)>0
           if  x<=fix_X_tar_1(1)
-            tag_tar = 1;
+            tag_tar = 1; tag_new = 1;
           elseif x>fix_X_tar_1(1) && x<fix_X_tar_1(2)
-            tag_pos = 1;
+            tag_pos = 1; tag_new = 2;
           elseif x>=fix_X_tar_1(2) && x<=fix_X_tar_2(1)
-            tag_tar = 1; tag_tar_2 = 1;
+            tag_tar = 1; tag_tar_2 = 1; tag_new = 3;
           elseif x>fix_X_tar_2(1) && x<fix_X_tar_2(2)
-            tag_pos_2 = 1;
+            tag_pos_2 = 1; tag_new = 4;
           else
-            tag_tar_2 = 1;
+            tag_tar_2 = 1; tag_new = 5;
           end
         end
       end
     else
       %%% randomly tag target or post-target if eye-tracker is off
       if mod(i,5) == 0
-        tag_tar = 1;
+        tag_tar = 1; tag_new = 1;
       elseif mod(i,5) == 1
-        tag_pos = 1;
+        tag_pos = 1; tag_new = 2;
       elseif mod(1,5) == 2
-        tag_tar = 1; tag_tar_2 = 1;
+        tag_tar = 1; tag_tar_2 = 1; tag_new = 3;
       elseif mod(1,5) == 3
-        tag_pos_2 = 1;
+        tag_pos_2 = 1; tag_new = 4;
       else
-        tag_tar_2 = 1;
+        tag_tar_2 = 1; tag_new = 5;
       end
+    end
+    
+    %%% if the tagging location needs to change, then the patch flickers
+    %%% from the begining of grey color
+    if tag_old ~= tag_new
+       j = 1;
+       tag_old = tag_new;
     end
     
     %%% put sentences onscreen
@@ -757,11 +764,9 @@ for i = 1:nTrials
       %%% draw end box
       Screen('FillRect', window, endbox_color, DotCoords_end(q,:));
       %%% draw photodiode
-      colortmp_p1 = [cfg.diodeTable1((((j-1)*12)+q)), cfg.diodeTable1((((j-1)*12)+q+4)),  cfg.diodeTable1((((j-1)*12)+q+8))];
-      colortmp_p2 = [cfg.diodeTable2((((j-1)*12)+q)), cfg.diodeTable2((((j-1)*12)+q+4)),  cfg.diodeTable2((((j-1)*12)+q+8))];
       if cfg.photoDiode
-        Screen('DrawTexture', window, diode_tex,[],diode1_pos{q},0, [], 1, colortmp_p1);
-        Screen('DrawTexture', window, diode_tex,[],diode2_pos{q},0, [], 1, colortmp_p2);
+        Screen('DrawTexture', window, diode_tex,[],diode1_pos{q},0, [], 1, tag_color);
+        Screen('DrawTexture', window, diode_tex,[],diode2_pos{q},0, [], 1, tag_color);
       end
     end
     %%% flip the frame

@@ -81,7 +81,6 @@ for ddd = [1 3]% DataSets = {'sv','of','fa'}; the data of 'sv and of' tasks are 
     delete([PPath.SaveData 'Trigger_MEG.mat'])
     delete([PPath.SaveData 'data.mat']);
     
-    
     %% ================epoching
     load([PPath.SaveData 'Event'])
     %%% get trialinfo index

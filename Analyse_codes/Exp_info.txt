@@ -1,3 +1,16 @@
+% conditions in exp
+sv: semantic violation
+    11--incongruent
+    12--congruent
+of: orthography + frequency
+    1--freq + orth familiar,
+    2--infreq + orth familiar
+    3--infreq + orth unfamiliar
+fa: full attention
+    21--low freq
+    22--high freq
+
+
 % set up triggers
 cfg.TriggerFix = 1;   % fixation onset
 cfg.TriggerStartBox = 2; % start box onset

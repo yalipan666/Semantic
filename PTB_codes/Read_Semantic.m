@@ -670,8 +670,8 @@ for i = 1:nTrials
         if cfg.el.eyelink
             sample = Eyelink('NewestFloatSample');
             % Get current gaze position from sample
-            x = sample.gx(1); %first sample should be left eye
-            y = sample.gy(1);
+            x = sample.gx(eyeused_id);  
+            y = sample.gy(eyeused_id);
             %%% xxxx plot eyelink window
             if cfg.CheckEyeMyself
                 % eyelink check window

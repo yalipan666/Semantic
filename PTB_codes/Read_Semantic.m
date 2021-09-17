@@ -187,11 +187,9 @@ Para.FlkWords = FlkWords;
 Para.TargCondPair = TargCondPair;
 
 % condition matrix
-CondMat = TargCondPair; %%[location condition]
-%save in cfg
-Para.CondMat = CondMat;
-%total nr of trials per block
-nTrials = size(CondMat,1);
+Para.CondMat = TargCondPair(:,2); %sentence_condition
+%total nr of trials
+nTrials = size(TargCondPair,1);
 Para.nTrials = nTrials;
 n_block = 5;
 Para.BreakTrials = ceil(nTrials/n_block); %How many trials between breaks?

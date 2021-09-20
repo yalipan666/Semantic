@@ -2,7 +2,7 @@
 % copy from Lexical/Analyse_codes
 % 20210719 clear functions to make scripts more concise
 
-function EyeData = Get_EyeData(eyefile, WordLocMat,Trigger)
+function EyeData = Get_EyeData(eyefile, WordLocMat,Trigger,TrackedEye)
 tic
 %%% Get important event details from eyelink file
 if isempty(eyefile)
@@ -34,14 +34,14 @@ while ~BlockEnd
     end
     %%% if this line is a fixation start
     if contains(strline, 'SFIX') 
-        vals = sscanf(strline, 'SFIX L %f'); %%vals-[StartTime EndTime Duration AveragedXPosition AveragedYPosition AveragedPupilSize]
+        vals = sscanf(strline, ['SFIX ' TrackedEye ' %f']); %%vals-[StartTime EndTime Duration AveragedXPosition AveragedYPosition AveragedPupilSize]
         isevent = 1;
         eidx = eidx + 1;
         txt = 'SFIX';
     end
     %%% if this line is a fixation end
     if contains(strline, 'EFIX') && exist('ti','var')
-        vals = sscanf(strline, 'EFIX L %f %f %f %f %f %f'); %%vals-[StartTime EndTime Duration AveragedXPosition AveragedYPosition AveragedPupilSize]
+        vals = sscanf(strline, ['EFIX ' TrackedEye ' %f %f %f %f %f %f']); %%vals-[StartTime EndTime Duration AveragedXPosition AveragedYPosition AveragedPupilSize]
         if SentenceScr == 1
             TrlFixdata{ti,1} = [TrlFixdata{ti,1}; vals'];
         end
@@ -51,28 +51,28 @@ while ~BlockEnd
     end
      %%% if this line is a saccade start
     if contains(strline, 'SSACC')
-        vals = sscanf(strline, 'SSACC L %f'); %%vals-[STime ETime Dur StartXPosit StartYPosit EndXPosit EndYPosit Amplitude(degree) PeakVelocity(deg/sec)]
+        vals = sscanf(strline, ['SSACC ' TrackedEye ' %f']); %%vals-[STime ETime Dur StartXPosit StartYPosit EndXPosit EndYPosit Amplitude(degree) PeakVelocity(deg/sec)]
         isevent = 1;
         eidx = eidx + 1;
         txt = 'SSACC';
     end
     %%% if this line is a saccade end
     if contains(strline, 'ESACC')
-        vals = sscanf(strline, 'ESACC L %f %f %f %f %f %f %f %f %f'); %%vals-[STime ETime Dur StartXPosit StartYPosit EndXPosit EndYPosit Amplitude(degree) PeakVelocity(deg/sec)]
+        vals = sscanf(strline, ['ESACC ' TrackedEye ' %f %f %f %f %f %f %f %f %f']); %%vals-[STime ETime Dur StartXPosit StartYPosit EndXPosit EndYPosit Amplitude(degree) PeakVelocity(deg/sec)]
         isevent = 1;
         eidx = eidx + 1;
         txt = 'ESACC';
     end
     %%% if this line is a blink start
     if contains(strline, 'SBLINK')
-        vals = sscanf(strline, 'SBLINK L %f'); %%vals-[STime ETime Dur StartXPosit StartYPosit EndXPosit EndYPosit Amplitude(degree) PeakVelocity(deg/sec)]
+        vals = sscanf(strline, ['SBLINK ' TrackedEye ' %f']); %%vals-[STime ETime Dur StartXPosit StartYPosit EndXPosit EndYPosit Amplitude(degree) PeakVelocity(deg/sec)]
         isevent = 1;
         eidx = eidx + 1;
         txt = 'SBLINK';
     end
     %%% if this line is a blink end
     if contains(strline, 'EBLINK')
-        vals = sscanf(strline, 'EBLINK L %f %f %f'); %%vals-[STime ETime Dur StartXPosit StartYPosit EndXPosit EndYPosit Amplitude(degree) PeakVelocity(deg/sec)]
+        vals = sscanf(strline, ['EBLINK ' TrackedEye ' %f %f %f']); %%vals-[STime ETime Dur StartXPosit StartYPosit EndXPosit EndYPosit Amplitude(degree) PeakVelocity(deg/sec)]
         isevent = 1;
         eidx = eidx + 1;
         txt = 'EBLINK';

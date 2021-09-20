@@ -1,8 +1,9 @@
-% copy from Lexical/Analyse_codes
-% 20210719 remove artefcts based on ica components, get all kinds of epochs based on
-% event
+% % % copy from Lexical/Analyse_codes
+% % % 20210719 remove artefcts based on ica components, get all kinds of epochs based on
+% % % event
 
 function S3_Get_all_epoches(server,sid)
+TaskId = [1 3];%DataSets = {'sv','of','fa'}; 'sv and of' tasks are combined in 1st task 
 
 %%% set paths
 if server
@@ -26,7 +27,7 @@ DoBaseline = 1; % get epochs for baseline period
 load([rootdir 'Analyse_data' filesep 'ExpInfo.mat']);
 DataSets = ExpInfo.DSName;
 
-for ddd = [1 3]% DataSets = {'sv','of','fa'}; the data of 'sv and of' tasks are combined in a single dataset
+for ddd = TaskId
     
     DS = DataSets{ddd};
     conds = ExpInfo.CondID;% condition mat for diff tasks

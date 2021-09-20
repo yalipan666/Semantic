@@ -4,10 +4,12 @@
 
 function S2_PreProcessing(sid) %id of sub
 % number of .fif files in SV task
-nfif_sv = 3; %normally 2 .fif files, 3 files for 20210826_b38f
+nfif_sv = 2; %normally 2 .fif files, 3 files for 20210826_b38f, 20210914_b397
+TaskId = [1 3];%DataSets = {'sv','of','fa'}; 'sv and of' tasks are combined in 1st task 
+TrackedEye = 'L'; %tracked eye of eye-link, 'L' or 'R'
 
 %%% set paths
-server = 0;
+server = 1;
 if server
     addpath /rds/projects/2018/jenseno-reading/fieldtrip-20200220/
     ft_defaults
@@ -32,7 +34,7 @@ PPara.SR         = 1000;
 load([rootdir 'Analyse_data' filesep 'ExpInfo.mat']);
 DataSets = ExpInfo.DSName;
 
-for ddd = [1 3]% DataSets = {'sv','of','fa'}; the data of 'sv and of' tasks are combined in a single dataset 
+for ddd = TaskId
     % since 'sv, of' tasks are combine in the fist dataset, there's no need
     % to run ddd = 2
     DS = DataSets{ddd};
@@ -91,12 +93,12 @@ for ddd = [1 3]% DataSets = {'sv','of','fa'}; the data of 'sv and of' tasks are 
     eyefile = [PPath.RawEye File.Eye '.asc'];
     load([PPath.RawPTB File.PTB],'Result');
     WordLocMat = 2.*Result.WordLocation;
-    EyeData = Get_EyeData(eyefile, WordLocMat,ExpInfo.Trigger);
+    EyeData = Get_EyeData(eyefile, WordLocMat,ExpInfo.Trigger,TrackedEye);
     save([PPath.SaveData 'EyeData'],'EyeData');
     
     %% get event
     load([PPath.RawPTB File.PTB],'Para'); % Para
-    Event = Get_Event(EyeData,Para.CondMat,Para.TargLoc,Trigger_MEG,ExpInfo.Trigger,ExpInfo.EventHdr);
+    Event = Get_Event(EyeData,Para.CondMat,Para.FlkWords,Trigger_MEG,ExpInfo.Trigger,ExpInfo.EventHdr);
     save([PPath.SaveData 'Event'],'Event','-v7.3');
     
     disp(['*** PreProcessing done! ' DS '---' sub]);

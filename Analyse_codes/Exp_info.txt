@@ -10,6 +10,13 @@ fa: full attention
     21--low freq
     22--high freq
 
+% conditions for Read_Semantic.m
+1: sv--1, of--1
+2: sv--1, of--2
+3: sv--1, of--3
+4: sv--2, of--1
+5: sv--2, of--2
+6: sv--2, of--3
 
 % set up triggers
 cfg.TriggerFix = 1;   % fixation onset

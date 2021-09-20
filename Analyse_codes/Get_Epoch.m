@@ -28,9 +28,9 @@ epochdata.time = epoch.time;
 
 %% preprocessing
 %%% get bad channels
-keepchan = {'MEG','EOG','MISC004','MISC005'};
+keepchan = {'MEG','MISC004','MISC005'};
 for cc = 1:length(PPara.badsens)
-    keepchan{cc+1} = ['-MEG' PPara.badsens{cc}];
+    keepchan{length(keepchan)+1} = ['-MEG' PPara.badsens{cc}];
 end
 cfg = [];
 cfg.channel = keepchan;

@@ -1,7 +1,7 @@
 %%% edit: Yali Pan, 20210706, Just a quick check of the tag signal
 
 %%% get sub_information
-subjects = {'20210916_b4ba'};
+subjects = {'20211028_b3b9';'20211028_b4c2'};
 %%%% addpath fieldtrip
 addpath Z:\fieldtrip-20200220\
 ft_defaults
@@ -58,9 +58,6 @@ for sss = 1:length(subjects)
         
         %%%%%%%%%%%%%%%%%%%%%%%%%%%% normalizing all the photodiode
         pd = find(strcmp(hdr.label,'MISC004'));
-        if sss == 1
-            pd = find(strcmp(hdr.label,'MISC005'));
-        end
         data(pd,:) = zscore(data(pd,:),0,2);
         
         %%Step-1: define trials mannually, epoch aligned with sentence_onset
@@ -96,7 +93,7 @@ for sss = 1:length(subjects)
         cfg.channel = {'MEGGRAD','MISC004'};
         cfg.method  = 'mtmfft';
         cfg.taper   = 'hanning';
-        cfg.foi     = 1:1:100;
+        cfg.foi     = 55:1:65;
         fourier=ft_freqanalysis(cfg,epoch_all); %=% tfr.powspctrm:3D data: trialnum*channelnum*freqpoint
         
         %%% statistical test of coherence
@@ -127,7 +124,7 @@ for sss = 1:length(subjects)
         ft_topoplotER(cfg,coh_cmb);
         colormap jet; colorbar;
         title(figtitle,'FontSize',16);
-        saveas(h,[figpath tt sub '_' figtitle],'bmp');
+        saveas(h,[figpath tt sub '_Topo'],'bmp');
     end
 end
 

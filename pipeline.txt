@@ -1,0 +1,12 @@
+0. prepare the datasets
+Put raw data into different RawData files accordingly, with the correct namings; 
+convert .edf eye-link file to .asc format
+1. S1_Get_ExpInfo.m: 
+update ExpInfo with the new subject
+2. S2_Preprocessing: 
+pre-processing data on bluebear: get raw megdata, eyedata, event, and all ica components
+3. S3_Get_all_epoches:
+remove artefcts based on ica components, get all kinds of epochs based on event
+
+
+

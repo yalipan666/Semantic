@@ -3,6 +3,12 @@
 % 20210719 clear functions to make scripts more concise
 
 function EyeData = Get_EyeData(eyefile, WordLocMat,Trigger,TrackedEye)
+%%% input paras:
+% eyefile: .asc file of the eyelink file
+% WordLocMat: matrix of xy coordinates of words [trial*words*4]
+% Trigger: struct of triggers, SentOn and SentOff are needed here 
+% TrackedEye: the eye that was tracked by eye-tracker, 'L' or 'R'
+
 tic
 %%% Get important event details from eyelink file
 if isempty(eyefile)
@@ -16,8 +22,8 @@ TriggerMat = [];%% getting triggers
 TrlFixdata = cell(size(WordLocMat,1),1);
 AllEyeEvents = {};
 eidx = 0; %% index for all events
-SentenceScr = 0;
-TrlId = [];
+SentenceScr = 0; %% whether a sentence is on the screen or not
+TrlId = []; %% index of trial
 while ~BlockEnd
     strline = fgetl(fid);
     isevent = 0;
@@ -118,7 +124,7 @@ for tt = 1:size(WordLocMat,1) %% trial index
     %%% define the word x-coordinates: the space BEFORE the word and the
     %%% x-length of the word!
     xposlim = [allwordloc(:,1)-xspace allwordloc(:,3)];
-    %%% extend the y coordinates by +-200 pixel
+    %%% extend the y coordinates by +-200 pixel (or other random size--y coordinate doesn't matter here)
     yposlim = [allwordloc(:,2)-200 allwordloc(:,4)+200];
     %%% get word index for a given eye-fixation
     wrdid = [];
@@ -162,7 +168,7 @@ EyeData.SaccadeData = SaccadeData;
  
      
 % %% Step-6: plot the eye movements trace
-% t = 60; %%% trial id, random chosen
+% t = 60; %%% trial id, randomly chosen
 % %%% using eye data from EyeLink
 % Edata = EyeData.TrlFixdata{t,1};
 % WrdLocs = 2.*squeeze(Result.WordLocation(t,:,:));

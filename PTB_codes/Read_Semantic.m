@@ -256,7 +256,6 @@ if ~cfg.debugmode
     keylist(active)=1; %set active keys to 1 (listen)
     KbQueueCreate(0,keylist);%%Create queue, this is a time consuming operation (relatively), do while non-time critical
     KbQueueStart(); %Start listening
-    KbQueueFlush();
 else
   %%% KEY response in debugmode
   leftKey = KbName('J'); %% true
@@ -463,6 +462,13 @@ cfg.triggerSent=0;
 
 %%%%%%%%%%%%%%================  trial loops  ===============%%%%%%%%%%%%%%%%%
 for i = 1:nTrials
+    
+    %%%  releasing both key press and button press
+    KbReleaseWait;  
+    if ~cfg.debugmode
+        KbQueueFlush();
+    end
+    
     EYEdata = []; % recording eye data for each trial
     % set up Text parameters
     Screen('TextFont', window, cfg.TextFont);
@@ -527,7 +533,6 @@ for i = 1:nTrials
     end
     
     %%%%%%%%%%%%%%%%%%%% ============ 2. start box ============ %%%%%%%%%%%%%%%%%%%%
-    KbReleaseWait;  %%%  make sure no key unreleased in debug
     ppp = 1; %%% index to send trigger
     j = 1; %% index of the frames to change the frequency table in each frame
     fff = 1;

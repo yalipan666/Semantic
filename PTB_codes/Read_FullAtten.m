@@ -256,7 +256,6 @@ if ~cfg.debugmode
   keylist(active)=1; %set active keys to 1 (listen)
   KbQueueCreate(0,keylist);%%Create queue, this is a time consuming operation (relatively), do while non-time critical
   KbQueueStart(); %Start listening
-  KbQueueFlush();
 else
   %%% KEY response in debugmode
   leftKey = KbName('J'); %% true
@@ -463,6 +462,12 @@ cfg.triggerSent=0;
 
 %%%%%%%%%%%%%%================  trial loops  ===============%%%%%%%%%%%%%%%%%
 for i = 1:nTrials
+    %%%  releasing both key press and button press
+    KbReleaseWait;  
+    if ~cfg.debugmode
+        KbQueueFlush();
+    end
+    
   EYEdata = []; % recording eye data for each trial
   % set up Text parameters
   Screen('TextFont', window, cfg.TextFont);
@@ -527,7 +532,6 @@ for i = 1:nTrials
   end
   
   %%%%%%%%%%%%%%%%%%%% ============ 2. start box ============ %%%%%%%%%%%%%%%%%%%%
-  KbReleaseWait;  %%%  make sure no key unreleased in debug
   ppp = 1; %%% index to send trigger
   j = 1; %% index of the frames to change the frequency table in each frame
   fff = 1;
@@ -685,8 +689,8 @@ for i = 1:nTrials
     if cfg.el.eyelink
       sample = Eyelink('NewestFloatSample');
       % Get current gaze position from sample
-      x = sample.gx(1); %first sample should be left eye
-      y = sample.gy(1);
+      x = sample.gx(eyeused_id); %first sample should be left eye
+      y = sample.gy(eyeused_id);
       %%% xxxx plot eyelink window
       if cfg.CheckEyeMyself
         % eyelink check window
@@ -697,7 +701,7 @@ for i = 1:nTrials
       end
       %%% decide where is the fixation
       if y < y_lim
-        if sample.pa(1)>0
+        if sample.pa(eyeused_id)>0
           if  x<=fix_X_tar_1(1)
             tag_tar = 1;
           elseif x>fix_X_tar_1(1) && x<fix_X_tar_1(2)

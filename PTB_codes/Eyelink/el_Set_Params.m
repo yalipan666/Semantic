@@ -41,11 +41,9 @@ Eyelink('message','DISPLAY_COORDS %ld %ld %ld %ld',         cfg.el_rect(1)-cfg.e
 
 % Use Psychophysical setting
 Eyelink('Command', 'recording_parse_type = GAZE');
-Eyelink('Command', 'saccade_motion_threshold = 0.0');
+Eyelink('Command', 'saccade_motion_threshold = 0.1');
 Eyelink('Command', 'saccade_pursuit_fixup = 60');
 Eyelink('Command', 'fixation_update_interval = 0');
-% Eyelink('Command', 'saccade_velocity_threshold = 22');
-% Eyelink('Command', 'saccade_acceleration_threshold = 3800');
 %%% YPan: changed accoording to the user mannual to be better for reading study
 Eyelink('Command', 'saccade_velocity_threshold = 30');
 Eyelink('Command', 'saccade_acceleration_threshold = 8000');

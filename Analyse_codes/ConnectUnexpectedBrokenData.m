@@ -4,33 +4,42 @@
 clear
 
 %%% setting parameters
-subname = '20210708_b5f6';
-megfile = ['of_' subname(10:end)];
-savepath = ['Z:\Semantic\Analyse_data\of_' subname '\'];
+subname = '20211022_b4bc';
+megfile = {'b4bc','b4bc-1','b4bc-2'};
+ptbfile = {'20211022_b4bc','20211022_b4bc_1'};
+savepath = ['Z:\Semantic\Analyse_data\sv_' subname '\'];
 ptbpath = 'Z:\Semantic\RawData\PTB_data\';
 megpath = 'Z:\Semantic\RawData\MEG_data\';
 
 %% %===== connecting the ptb data
 %%% load the second part ptb data
-load([ptbpath subname '_2.mat'])
-broke_trlid = find(~isnan(Result.FixationON),1);
-disp(['*** broken trl id: ' num2str(broke_trlid) '***']);
-Para_all = Para;
-Result_all = Result;
-
-%%% load the first part ptb data
-load([ptbpath subname '.mat'])
-idx_1 = 1:broke_trlid-1;
-Para_all.FixDuration(idx_1) = Para.FixDuration(idx_1);
-Result_all.FixationON(idx_1) = Result.FixationON(idx_1);
-Result_all.StartBoxON(idx_1) = Result.StartBoxON(idx_1);
-Result_all.SentenceON(idx_1) = Result.SentenceON(idx_1);
-Result_all.ITION(idx_1) = Result.ITION(idx_1);
-Result_all.ProbeON(idx_1) = Result.ProbeON(idx_1);
-Result_all.RT(idx_1) = Result.RT(idx_1);
-Result_all.CORR(idx_1) = Result.CORR(idx_1);
-Result_all.KeyPress(idx_1) = Result.KeyPress(idx_1);
-Result_all.WordLocation(idx_1,:,:) = Result.WordLocation(idx_1,:,:);
+n = length(ptbfile);
+trlid_end = [nan 277];
+for ff = n:-1:1
+    load([ptbpath ptbfile{ff} '.mat'])
+    trlid_start = find(~isnan(Result.FixationON),1);
+    disp(['*** broken trl id: ' num2str(trlid_start) '***']);
+    if ff == n % use the first-loaded data struct as all data struct
+        Para_all = Para;
+        Result_all = Result;
+    end
+    % copy data segment to the all data struct
+    idx = trlid_start:trlid_end(ff);
+    Para_all.FixDuration(idx) = Para.FixDuration(idx);
+    Result_all.FixationON(idx) = Result.FixationON(idx);
+    Result_all.StartBoxON(idx) = Result.StartBoxON(idx);
+    Result_all.SentenceON(idx) = Result.SentenceON(idx);
+    Result_all.ITION(idx) = Result.ITION(idx);
+    Result_all.ProbeON(idx) = Result.ProbeON(idx);
+    Result_all.RT(idx) = Result.RT(idx);
+    Result_all.CORR(idx) = Result.CORR(idx);
+    Result_all.KeyPress(idx) = Result.KeyPress(idx);
+    Result_all.WordLocation(idx,:,:) = Result.WordLocation(idx,:,:);
+    % get the trlid_end
+    if ff ~= 1
+        trlid_end(ff-1) = trlid_start-1;
+    end
+end
 
 %%% save out
 Para = Para_all;
@@ -38,43 +47,59 @@ Result = Result_all;
 save([ptbpath subname '.mat'],'cfg','Para','Result')
 
 
+%% %% connecting the MEG data and marker!MEG will break whole session into 2 parts automatically!
+dataset = [megpath subname filesep subname(3:8) filesep];
+data = [];
+Trig = [];
+trlid_num = [];% number of trials in each MEG data segment
+for ff = 1:length(megfile)
+    cfg         = [];
+    cfg.dataset = [dataset megfile{ff} '.fif'];
+    event       = ft_read_event(cfg.dataset);
+    Trig_tmp    = [[event(strcmp('Trigger',{event.type})).value]' [event(strcmp('Trigger',{event.type})).sample]'];
+    %%% check how many triggers in this dataset and remove the extra data
+    %%% and triggers based on the trlid_end
+    all_iti_trig = Trig_tmp(Trig_tmp(:,1)==16,2);
+    trlid_num = [trlid_num length(all_iti_trig)];
+end
+correct trlid_num based on trlid_end
+trlid_num(1) = trlid_end(1);
+for ff = 1:length(megfile)
+    cfg         = [];
+    cfg.dataset = [dataset megfile{ff} '.fif'];
+    event       = ft_read_event(cfg.dataset);
+    data_tmp    = ft_read_data(cfg.dataset);
+    Trig_tmp    = [[event(strcmp('Trigger',{event.type})).value]' [event(strcmp('Trigger',{event.type})).sample]'];
+    %%% check how many triggers in this dataset and remove the extra data
+    %%% and triggers based on the trlid_end
+    all_iti_trig = Trig_tmp(Trig_tmp(:,1)==16,2);
+    end_tp = all_iti_trig(trlid_num(ff))+500; %ITI duration is 500ms
+    % if this is not an automatic break by MEGIN! remove this line if
+    % needed
+    if ff ~= 2
+        Trig_tmp(Trig_tmp(:,2)>end_tp,:) = [];
+        data_tmp(:,end_tp+1:end) = [];
+    end
+    % put data segment into the all data struct
+    data = [data data_tmp];
+    Trig = [Trig; Trig_tmp];
+    clear data_tmp Trig_tmp
+    % only get hdr for the last segment
+    if ff == length(megfile)
+        hdr = ft_read_header(cfg.dataset);
+    end
+end
+if length(Trig) ~= 1385
+    error('wrong number of the triggers')
+end
+% save out
+save([savepath 'hdr'], 'hdr','-v7.3')
+save([savepath 'data'], 'data','-v7.3')
+save([savepath 'Trig'], 'Trig','-v7.3')
+
 %% %%%===== connecting the eye data
+% after converting the eye-link file from .edf to .asc
 % just clear the unwanted trial clearly in the end of the first part and begining of the second part
 % then copy the second txt into the first one
 % because the trigger timepoint counts from the time when the pc is turned
 % on and contunuely counting, so it's okay to just put them together
-
-
-%% %% connecting the MEG data and marker
-dataset = [megpath subname filesep subname(3:8) filesep megfile];
-cfg         = [];
-cfg.dataset = [dataset '.fif'];
-hdr         = ft_read_header(cfg.dataset);
-event       = ft_read_event(cfg.dataset);
-data        = ft_read_data(cfg.dataset);
-Trigger_MEG = [[event(strcmp('Trigger',{event.type})).value]' [event(strcmp('Trigger',{event.type})).sample]'];
-
-%%% check how many triggers in the first dataset and remove the extra data and triggers
-all_iti_trig = Trigger_MEG(Trigger_MEG(:,1)==16,2);
-ntrl = length(all_iti_trig);
-end_tp = all_iti_trig(broke_trlid-1)+500; %ITI duration is 500ms
-Trigger_MEG(Trigger_MEG(:,2)>end_tp,:) = [];
-data(:,end_tp:end) = [];
-
-%%% get the second dataset
-cfg         = [];
-cfg.dataset = [dataset '-1.fif'];
-data2  = ft_read_data(cfg.dataset);
-event2 = ft_read_event(cfg.dataset);
-Trigger_MEG2 = [[event2(strcmp('Trigger',{event2.type})).value]' [event2(strcmp('Trigger',{event2.type})).sample]'];
-Trigger_MEG2(:,2) = Trigger_MEG2(:,2)+end_tp-1;
-data = [data data2];
-clear data2
-Trigger_MEG = [Trigger_MEG; Trigger_MEG2];
-
-% save out
-save([savepath 'hdr'], 'hdr','-v7.3')
-save([savepath 'data'], 'data','-v7.3')
-save([savepath 'Trigger_MEG'], 'Trigger_MEG','-v7.3')
-
-

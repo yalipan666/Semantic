@@ -213,7 +213,7 @@ PreTest.Plausibility.congID_v2 = find(cong_id);
 
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%% analyzing pre-tests for semantic violation %%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%% analyzing pre-tests for semantic violation %%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% 1st prediction test for the origianl 158 sentences
 path_pred = [ppath 'predictability\subject_files\first_158sents\'];
@@ -369,7 +369,7 @@ end
 % copy out as csv --Predictability_result(sheet:2nd) (csvwrite doesn't accept cell array)
 
 
-%% plausibility test
+%% ============ plausibility test ============= %%
 %%%% V1--first_old158sents
 % get all files
 plau_path = [ppath 'plausibility\subject_files\first_old158sents\'];
@@ -442,7 +442,7 @@ sub_cong_all = [sub_cong_all sub_cong]; % 1*n
 sub_incong_all = [sub_incong_all sub_incong];
 
 
-%% new-version-1
+%% === new-version-1
 plau_path = [ppath 'plausibility\subject_files\version_1\'];
 MyFolderInfo = dir(plau_path);
 n_sub = length(MyFolderInfo)-2;
@@ -478,7 +478,9 @@ sub_incong_v1 = [sub_incong_v1 sub_incong];
 
 
 
-%%  new-version-2
+%% === new-version-2
+ppath = 'U:\Projects\Semantic_Parafoveal_Reading\Pre-test\';
+load('U:\Projects\Semantic_Parafoveal_Reading\Pre-test\PreTest');
 plau_path = [ppath 'plausibility\subject_files\version_2\'];
 MyFolderInfo = dir(plau_path);
 n_sub = length(MyFolderInfo)-2;
@@ -496,6 +498,17 @@ all_cong = plaus_rate(cong_id,:);
 sub_cong = mean(all_cong,1);
 all_incong = plaus_rate(incong_id,:);
 sub_incong = mean(all_incong,1);
+% save out
+PreTest.PlausibilityResult.V2_age_female = ...
+    [26 25 23 23 24 24 21 23 19 20 20 20 21 20 20 19 19 19 18 19 20;
+     0 0 0 0 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1];
+PreTest.PlausibilityResult.V2_cong_subs = sub_cong;
+PreTest.PlausibilityResult.V2_cong_avg_std = [mean(sub_cong) std(sub_cong)]; 
+PreTest.PlausibilityResult.V2_incong_subs = sub_incong;
+PreTest.PlausibilityResult.V2_incong_avg_std = [mean(sub_incong) std(sub_incong)];  
+save([ppath 'PreTest.mat'],'PreTest');
+
+
 % check plausibility item-wise
 % get whole sentence mat
 [~,txt] = xlsread([plau_path filnam],1,'A16:A255'); 
@@ -513,9 +526,6 @@ sub_cong_v2 = sub_cong; % 1*n
 sub_incong_v2 = sub_incong;
 
 
-
-
-
 %%
 [mean(sub_cong_v1) std(sub_cong_v1)]
 [mean(sub_incong_v1) std(sub_incong_v1)]
@@ -526,7 +536,6 @@ sub_incong_v2 = sub_incong;
 
 [mean(sub_cong_v1([1:10 18:24])) std(sub_cong_v1([1:10 18:24]))]
 [mean(sub_incong_v1([1:10 18:24])) std(sub_incong_v1([1:10 18:24]))]
-
 
 
 PreTest.Plausibility.incong_avg_std = [mean(all_incong_rate) std(all_incong_rate)];  

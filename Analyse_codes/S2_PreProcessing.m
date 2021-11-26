@@ -4,8 +4,7 @@
 
 function S2_PreProcessing(sid) %id of sub
 % number of .fif files in SV task
-nfif_sv = 2; %normally 2 .fif files, 3 files for 20210826_b38f, 20210914_b397
-TaskId = [1 3];%DataSets = {'sv','of','fa'}; 'sv and of' tasks are combined in 1st task 
+TaskId = [1 3];%DataSets = {'sv','of','fa'}; 'sv and of' tasks are combined in 1st task
 TrackedEye = 'L'; %tracked eye of eye-link, 'L' or 'R'
 
 %%% set paths
@@ -58,13 +57,18 @@ for ddd = TaskId
     if ~exist([PPath.SaveData 'data.mat'],'file')
         if strcmp(DS,'sv') % SV task with two/three .fif files
             tmpf = [sub filesep sub(3:8) filesep sub(10:end)];
-            File.MEG = cell(1,nfif_sv);
-            for f = 1:nfif_sv
-                if f == 1
-                   File.MEG{f} = [tmpf '.fif'];
+            File.MEG = cell(1,2); % init
+            File.MEG{1,f} = [tmpf '.fif'];
+            % loop to find the append data
+            f = 1; % index of append data
+            while 1
+                tmpmeg = [tmpf '-' num2str(f) '.fif'];
+                if exist([PPath.RawMEG tmpmeg],'file')
+                    File.MEG{1,f+1} = tmpmeg;
                 else
-                   File.MEG{f} = [tmpf '-' num2str(f-1) '.fif'];
+                    break
                 end
+                f = f + 1;
             end
         else % another task with one .fif file
             File.MEG = {[sub filesep sub(3:8) filesep DS '_' sub(10:end) '.fif']};

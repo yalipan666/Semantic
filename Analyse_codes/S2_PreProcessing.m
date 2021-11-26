@@ -58,7 +58,7 @@ for ddd = TaskId
         if strcmp(DS,'sv') % SV task with two/three .fif files
             tmpf = [sub filesep sub(3:8) filesep sub(10:end)];
             File.MEG = cell(1,2); % init
-            File.MEG{1,f} = [tmpf '.fif'];
+            File.MEG{1,1} = [tmpf '.fif'];
             % loop to find the append data
             f = 1; % index of append data
             while 1

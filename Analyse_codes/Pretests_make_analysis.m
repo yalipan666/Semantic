@@ -438,6 +438,7 @@ low_incong_id = incong_id(item_incong > 3)
 item_cong(item_incong > 3)
 txt(incong_id(low_incong_id))
 
+%%% combine together --- first_old158sents & first_old160sents
 sub_cong_all = [sub_cong_all sub_cong]; % 1*n 
 sub_incong_all = [sub_incong_all sub_incong];
 
@@ -473,8 +474,21 @@ low_incong_id = incong_id(item_incong > 3)
 item_incong(item_incong > 3)
 txt(low_incong_id)
 
-sub_cong_v1 = [sub_cong_v1 sub_cong]; % 1*n 
-sub_incong_v1 = [sub_incong_v1 sub_incong];
+%%% combine together --- V1
+sub_cong_v1 = [sub_cong_all sub_cong]; % 1*n 
+sub_incong_v1 = [sub_incong_all sub_incong];
+sub_cong = sub_cong_v1;
+sub_incong = sub_incong_v1;
+
+%%%% save out to pre-test struct
+PreTest.PlausibilityResult.V1_age_female = ...
+    [22 26 23 23 22 22 23 23 19 31 23 25 50 22 23 23 23 19 19 20 18 19 19 19 19 20 20;
+     0 0 nan 1 1 1 1 1 1 1 1 1 1 1 1 1 1 0 0 1 1 1 1 1 1 1 1];
+PreTest.PlausibilityResult.V1_cong_subs = sub_cong;
+PreTest.PlausibilityResult.V1_cong_avg_std = [mean(sub_cong) std(sub_cong)]; 
+PreTest.PlausibilityResult.V1_incong_subs = sub_incong;
+PreTest.PlausibilityResult.V1_incong_avg_std = [mean(sub_incong) std(sub_incong)];  
+save([ppath 'PreTest.mat'],'PreTest');
 
 
 

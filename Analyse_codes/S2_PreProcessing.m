@@ -4,8 +4,8 @@
 
 function S2_PreProcessing(sid) %id of sub
 % number of .fif files in SV task
-TaskId = [1 3];%DataSets = {'sv','of','fa'}; 'sv and of' tasks are combined in 1st task
-TrackedEye = 'L'; %tracked eye of eye-link, 'L' or 'R'
+TaskId = [1 3]; %DataSets = {'sv','of','fa'}; 'sv and of' tasks are combined in 1st task
+
 
 %%% set paths
 server = 1;
@@ -28,6 +28,11 @@ PPara.bpfilter   = 'yes';
 PPara.bpfreq     = [0.5 100];
 PPara.detrend    = 'yes';
 PPara.SR         = 1000;
+% % %%% parameters for OPTICAT
+% % PPara.OPTICAT    = 0;
+% % PPara.hpfilter   = 'yes';% high-pass filter for OPTICAT
+% % PPara.hpfreq     = 2;  
+
 
 %%% get file names
 load([rootdir 'Analyse_data' filesep 'ExpInfo.mat']);
@@ -41,6 +46,13 @@ for ddd = TaskId
     eval(['PTBFiles = ExpInfo.PTBFiles.' DS ';']);
     eval(['EyeFiles = ExpInfo.EyeFiles.' DS ';']);
     sub = subjects{sid};
+    % get tracked eye of eye-link, 'L' or 'R'
+    if any(strcmp(ExpInfo.TrackRightEye,sub))
+        TrackedEye = 'R';  
+    else
+        TrackedEye = 'L'; 
+    end
+    
     PPara.sub = sub;
     PPara.badsens = ExpInfo.BadSensor{sid};
     File.PTB = PTBFiles{sid};
@@ -83,15 +95,6 @@ for ddd = TaskId
         load([PPath.SaveData 'Trigger_MEG']);
     end
     
-    %% remove artefacts with ICA on server
-    % just run ica for the exp data, excluding the hpi signal at the begining
-    % and the end of exp
-    PPara.icastart = Trigger_MEG(1,2);
-    PPara.cutlen4ica = 2^(nextpow2(4*PPara.SR));%random length for epoching in ica
-    PPara.icaend = Trigger_MEG(end,2)+PPara.cutlen4ica;
-    [data4ICA, comp] = ICA4rawdata(PPara,hdr,data);
-    save([PPath.SaveData 'ica.mat'],'data4ICA','comp','-v7.3')
-    
     %% get eyemovement metrics from eyelink
     %first converting data from .edf to .asc (C:/toolbox/SR Research/edfconverter/)
     eyefile = [PPath.RawEye File.Eye '.asc'];
@@ -104,6 +107,19 @@ for ddd = TaskId
     load([PPath.RawPTB File.PTB],'Para'); % Para
     Event = Get_Event(EyeData,Para.CondMat,Para.FlkWords,Trigger_MEG,ExpInfo.Trigger,ExpInfo.EventHdr);
     save([PPath.SaveData 'Event'],'Event','-v7.3');
+   
+    %% remove artefacts with ICA on server
+    % just run ica for the exp data, excluding the hpi signal at the begining
+    % and the end of exp
+    PPara.icastart = Trigger_MEG(1,2);
+    PPara.cutlen4ica = 2^(nextpow2(4*PPara.SR));%random length for epoching in ica
+    PPara.icaend = Trigger_MEG(end,2)+PPara.cutlen4ica;
+% %     if PPara.OPTICAT == 1
+% %         PPara.trig_sac = Event.event_raw(:,7)+Event.event_raw(:,8); % para for OPTICAT, trigger for saccade onset/fixation offset of a given word
+% %         PPara.sac_epoch = [-0.02 0.01]; % duration for saccade_related_epochs, unit in s
+% %     end
+    [data4ICA, comp] = ICA4rawdata(PPara,hdr,data);
+    save([PPath.SaveData 'ica.mat'],'data4ICA','comp','-v7.3')
     
     disp(['*** PreProcessing done! ' DS '---' sub]);
 end

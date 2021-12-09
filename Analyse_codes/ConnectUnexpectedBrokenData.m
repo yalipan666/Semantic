@@ -4,9 +4,9 @@
 clear
 
 %%% setting parameters
-subname = '20211022_b4bc';
-megfile = {'b4bc','b4bc-1','b4bc-2'};
-ptbfile = {'20211022_b4bc','20211022_b4bc_1'};
+subname = '20211004_b4d0';
+megfile = {'b4d0','b4d0-1','b4d0-2'};
+ptbfile = {'20211004_b4d0','20211004_b4d0_1','20211004_b4d0_2'};
 savepath = ['Z:\Semantic\Analyse_data\sv_' subname '\'];
 ptbpath = 'Z:\Semantic\RawData\PTB_data\';
 megpath = 'Z:\Semantic\RawData\MEG_data\';
@@ -14,7 +14,7 @@ megpath = 'Z:\Semantic\RawData\MEG_data\';
 %% %===== connecting the ptb data
 %%% load the second part ptb data
 n = length(ptbfile);
-trlid_end = [nan 277];
+trlid_end = [nan(1,n-1) 277];
 for ff = n:-1:1
     load([ptbpath ptbfile{ff} '.mat'])
     trlid_start = find(~isnan(Result.FixationON),1);
@@ -45,25 +45,14 @@ end
 Para = Para_all;
 Result = Result_all;
 save([ptbpath subname '.mat'],'cfg','Para','Result')
+delete([ptbpath subname '_*.mat'])
 
-
-%% %% connecting the MEG data and marker!MEG will break whole session into 2 parts automatically!
+%% connecting the MEG data and marker! MEG will break whole session into 2 parts automatically!
 dataset = [megpath subname filesep subname(3:8) filesep];
 data = [];
-Trig = [];
-trlid_num = [];% number of trials in each MEG data segment
-for ff = 1:length(megfile)
-    cfg         = [];
-    cfg.dataset = [dataset megfile{ff} '.fif'];
-    event       = ft_read_event(cfg.dataset);
-    Trig_tmp    = [[event(strcmp('Trigger',{event.type})).value]' [event(strcmp('Trigger',{event.type})).sample]'];
-    %%% check how many triggers in this dataset and remove the extra data
-    %%% and triggers based on the trlid_end
-    all_iti_trig = Trig_tmp(Trig_tmp(:,1)==16,2);
-    trlid_num = [trlid_num length(all_iti_trig)];
-end
-correct trlid_num based on trlid_end
-trlid_num(1) = trlid_end(1);
+Trigger_MEG = [];
+trlid_num = [trlid_end(1) diff(trlid_end)];% number of trials in each MEG data segment
+add_tp = 0;%time points that needs to be added to trigger_mat,initialize as 0
 for ff = 1:length(megfile)
     cfg         = [];
     cfg.dataset = [dataset megfile{ff} '.fif'];
@@ -74,28 +63,27 @@ for ff = 1:length(megfile)
     %%% and triggers based on the trlid_end
     all_iti_trig = Trig_tmp(Trig_tmp(:,1)==16,2);
     end_tp = all_iti_trig(trlid_num(ff))+500; %ITI duration is 500ms
-    % if this is not an automatic break by MEGIN! remove this line if
-    % needed
-    if ff ~= 2
-        Trig_tmp(Trig_tmp(:,2)>end_tp,:) = [];
-        data_tmp(:,end_tp+1:end) = [];
-    end
+    Trig_tmp(Trig_tmp(:,2)>end_tp,:) = [];
+    data_tmp(:,end_tp+1:end) = [];
     % put data segment into the all data struct
     data = [data data_tmp];
-    Trig = [Trig; Trig_tmp];
+    Trig_tmp(:,2) = Trig_tmp(:,2)+add_tp;
+    Trigger_MEG = [Trigger_MEG; Trig_tmp];
     clear data_tmp Trig_tmp
+    % get the to be addded tp from end_tp
+    add_tp = end_tp;
     % only get hdr for the last segment
     if ff == length(megfile)
         hdr = ft_read_header(cfg.dataset);
     end
 end
-if length(Trig) ~= 1385
+if length(Trigger_MEG) ~= 1385
     error('wrong number of the triggers')
 end
 % save out
 save([savepath 'hdr'], 'hdr','-v7.3')
 save([savepath 'data'], 'data','-v7.3')
-save([savepath 'Trig'], 'Trig','-v7.3')
+save([savepath 'Trigger_MEG'], 'Trigger_MEG','-v7.3')
 
 %% %%%===== connecting the eye data
 % after converting the eye-link file from .edf to .asc

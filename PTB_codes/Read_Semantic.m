@@ -801,7 +801,8 @@ for i = 1:nTrials
         noResponse=1;
         while noResponse
             if ~cfg.debugmode %% NaTA box
-                [pressed, firstpress]=KbQueueCheck(); %check response, return whether pressed, and first press timestamp
+                [pressed, firstpress] = KbQueueCheck(); %check response, return whether pressed, and first press timestamp
+                KbQueueFlush(); %only the KbQueues events are deleted.
                 %Note that two keys may have been pressed
                 KeyCode=find(firstpress);
                 if length(KeyCode)>1 %two or more buttons pressed
@@ -887,7 +888,8 @@ for i = 1:nTrials
         noResponse = 1;
         while noResponse
           if ~cfg.debugmode
-            [pressed]=KbQueueCheck(); %check response, return whether pressed, and first press timestamp
+            [pressed] = KbQueueCheck(); %check response, return whether pressed, and first press timestamp
+            KbQueueFlush(); %only the KbQueues events are deleted.
           else
             [pressed] = KbCheck;
           end

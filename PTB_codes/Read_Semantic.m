@@ -106,7 +106,7 @@ if cfg.el.eyelink
         mkdir(cfg.el.eyedir);
     end
     %check whether files already exist for this subject/session
-    if exist([exp_dir filesep 'Eyelink' filesep 'Data' filesep  cfg.el.edffile '.edf'],'file')>0
+    if exist([exp_dir filesep 'Eyelink' filesep 'Data' filesep  cfg.el.edffile],'file')>0
         cont = input('Warning! Eyelink file will be overwritten, do you want to continue? (y/n) ','s');
         if cont == 'n'
             error('Session aborted')

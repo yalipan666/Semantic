@@ -106,7 +106,7 @@ if cfg.el.eyelink
     mkdir(cfg.el.eyedir);
   end
   %check whether files already exist for this subject/session
-  if exist([exp_dir filesep 'Eyelink' filesep 'Data' filesep  cfg.el.edffile '.edf'],'file')>0
+  if exist([exp_dir filesep 'Eyelink' filesep 'Data' filesep  cfg.el.edffile],'file')>0
     cont = input('Warning! Eyelink file will be overwritten, do you want to continue? (y/n) ','s');
     if cont == 'n'
       error('Session aborted')
@@ -451,12 +451,10 @@ KbWait; %% waiting for key pressing
 if cfg.el.eyelink
   cfg = el_calib_valid(cfg,0); % get the cfg.el.defaults settings
 end
-
 if cfg.el.eyelink
   %%Experiment start message to eyelink
   Eyelink('Message', 'Exp start');
 end
-
 %%%% no trigger sent yet
 cfg.triggerSent=0;
 

@@ -14,7 +14,7 @@ el.displayCalResults       = 1;
 el.eyeimagesize            = 50;  % percentage of screen
 
 %%% color settings
-el.backgroundcolour = [0.75 0.75 0.75];%cfg.ScrBgc;
+el.backgroundcolour = cfg.ScrBgc;
 el.foregroundcolour = cfg.TextColor;
 el.msgfontcolour    = cfg.TextColor;
 el.imgtitlecolour   = cfg.TextColor;

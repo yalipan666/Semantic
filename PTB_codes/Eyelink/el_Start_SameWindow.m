@@ -46,33 +46,13 @@ function cfg = el_Start_SameWindow(cfg)
     % set custom parameters
     disp('Setting parameters')
     cfg = el_Set_Params(cfg);
-     
-    
-    %%% check eye tracker myself, run atuomatically, no need for key-pressing
-%     if cfg.CheckEyeMyself
-%         EyelinkDoTrackerSetup(cfg.el.defaults);
-%         % do a final check of calibration using driftcorrection
-%         EyelinkDoDriftCorrection_pan(cfg.el.defaults);
-      
-%         %%% change default function keys to NaTAbox value
-%         cfg.el.defaults.SPACE_BAR = KbName('4$');
-%         cfg.el.defaults.el.ESC_KEY = KbName('7&');
-%         %%% get eye image to adjust eyetracker position 
-%         EyelinkDoTrackerSetup(cfg.el.defaults,13); 
-%         %%% calibration
-%         EyelinkDoTrackerSetup(cfg.el.defaults,'c'); 
-%         %%% validation
-%         EyelinkDoTrackerSetup(cfg.el.defaults,'v');
-%         %%% drift correction
-%         EyelinkDoDriftCorrection(el);
-%     else
+  
         % Calibrate the eye tracker
         disp('Starting calibration')
         EyelinkDoTrackerSetup(cfg.el.defaults);
         % do a final check of calibration using driftcorrection
 %         EyelinkDoDriftCorrection(cfg.el.defaults);
-%     end
-    
+
     
     % STEP 5
     % start recording eye position

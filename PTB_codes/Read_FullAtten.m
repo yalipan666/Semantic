@@ -113,8 +113,6 @@ if cfg.el.eyelink
     end
   end
   cfg.el_rect = [0 0 resx resy]; %% needed for the el_Set_Params function
-  % Set parameters, start and calibrate eyelink
-  
 else %=% when eyelink is off
   if ~cfg.debugmode %is this is real experiment time, eyelink should be on
     if cfg.el.override
@@ -269,9 +267,6 @@ cfg.TriggerStartBox = 2; % start box onset
 cfg.TriggerSentOn = 4;   %  sentence onset
 cfg.TriggerSentOff = 8;  % sentence offset
 cfg.TriggerITI = 16;   % ITI onset
-cfg.TriggerOpenEye = 64;
-cfg.TriggerCloseEye = 128;
-cfg.TriggerPureTagOn = 32;   % tagging on in the pure tagging task
 
 % set up parallel port
 if ~cfg.debugmode
@@ -492,7 +487,6 @@ for i = 1:nTrials
         cfg.diodeTable=cur_freqTable(dsearchn(cfg.FreqMat',f2),:);
     end
   end
-  
   
   %%%%%%======= do drift correction
   if  cfg.el.eyelink && i ~= 1

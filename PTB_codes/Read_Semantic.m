@@ -269,9 +269,6 @@ cfg.TriggerStartBox = 2; % start box onset
 cfg.TriggerSentOn = 4;   %  sentence onset
 cfg.TriggerSentOff = 8;  % sentence offset
 cfg.TriggerITI = 16;   % ITI onset
-cfg.TriggerOpenEye = 64;   
-cfg.TriggerCloseEye = 128;  
-cfg.TriggerPureTagOn = 32;   % tagging on in the pure tagging task
 
 % set up parallel port
 if ~cfg.debugmode

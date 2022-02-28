@@ -4,9 +4,9 @@
 clear
 
 %%% setting parameters
-subname = '20211004_b4d0';
-megfile = {'b4d0','b4d0-1','b4d0-2'};
-ptbfile = {'20211004_b4d0','20211004_b4d0_1','20211004_b4d0_2'};
+subname = '20211022_b4bc';
+megfile = {'b4bc','b4bc-1','b4bc-2'};
+ptbfile = {'20211022_b4bc','20211022_b4bc_1'};
 savepath = ['Z:\Semantic\Analyse_data\sv_' subname '\'];
 ptbpath = 'Z:\Semantic\RawData\PTB_data\';
 megpath = 'Z:\Semantic\RawData\MEG_data\';
@@ -52,7 +52,10 @@ dataset = [megpath subname filesep subname(3:8) filesep];
 data = [];
 Trigger_MEG = [];
 trlid_num = [trlid_end(1) diff(trlid_end)];% number of trials in each MEG data segment
-add_tp = 0;%time points that needs to be added to trigger_mat,initialize as 0
+if length(trlid_num) ~= length(megfile)
+    error('more meg files than expected, need to change trlid_num')
+end
+add_tp = [0];%time points that needs to be added to trigger_mat,initialize as 0
 for ff = 1:length(megfile)
     cfg         = [];
     cfg.dataset = [dataset megfile{ff} '.fif'];
@@ -67,11 +70,11 @@ for ff = 1:length(megfile)
     data_tmp(:,end_tp+1:end) = [];
     % put data segment into the all data struct
     data = [data data_tmp];
-    Trig_tmp(:,2) = Trig_tmp(:,2)+add_tp;
+    Trig_tmp(:,2) = Trig_tmp(:,2)+sum(add_tp);
     Trigger_MEG = [Trigger_MEG; Trig_tmp];
     clear data_tmp Trig_tmp
     % get the to be addded tp from end_tp
-    add_tp = end_tp;
+    add_tp = [add_tp end_tp];
     % only get hdr for the last segment
     if ff == length(megfile)
         hdr = ft_read_header(cfg.dataset);

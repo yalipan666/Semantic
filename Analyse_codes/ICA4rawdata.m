@@ -1,19 +1,20 @@
 % copy from Lexical/Analyse_codes
 % 20210719 clear functions to make scripts more concise
 
-function [data4ICA, comp] = ICA4rawdata(PPara,hdr,data)
-%%% get standard fieldtrip strcture by cutting data into random epochs
-trig = PPara.icastart:PPara.cutlen4ica:PPara.icaend; 
+function [data4ICA, comp, Trig] = ICA4rawdata(PPara,hdr,data)
+%%% get standard fieldtrip strcture
 epoch = [];
-epoch.label = hdr.label; 
-for i = 1:length(trig)-1
-    trlbegin             = trig(i);
-    trlend               = trig(i+1)-1;
+epoch.label = hdr.label; %%% the full labels--340
+for i = 1:length(PPara.fixon)
+    trlbegin             = PPara.fixon(i);
+    trlend               = PPara.sentoff(i);
     epoch.trial{i}       = data(:,trlbegin:trlend);
     epoch.time{i}        = (trlbegin:trlend)/PPara.SR;
-    epoch.trl(i,:)       = [trlbegin trlend PPara.cutlen4ica];
-    epoch.trialinfo(i,:) = [trlbegin trlend PPara.cutlen4ica];
+    epoch.trl(i,:)       = [trlbegin trlend PPara.pretrig];
+    epoch.trialinfo(i,:) = [trlbegin trlend PPara.pretrig];
 end
+Trig.fixon = PPara.fixon;
+Trig.sentoff = PPara.sentoff;
 
 %%% get bad channels
 keepchan = {'MEG'};

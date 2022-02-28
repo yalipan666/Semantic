@@ -1,7 +1,7 @@
 % copy from Lexical/Analyse_codes
 % 20210719 clear functions to make scripts more concise
 
-function [epoch_sumrj,ValidTrlPerct] = Get_Epoch(hdr,data,PPara,trig_col)
+function epoch_sumrj = Get_Epoch(hdr,data,PPara,trig_col)
 %%% get raw epoch
 epoch = []; %time zero is 'fixation_on_MEG'
 if isempty(trig_col)
@@ -56,10 +56,6 @@ trl_keep(trl_rej) = [];
 chan_rej = setdiff(data_planar.label,tempdata_rjv_planar.label);
 
 %%%%%%% get the valid trail number
-ValidTrlPerct = (length(trl_keep)/(length(trl_rej)+length(trl_keep)));
-if ValidTrlPerct < 0.75
-    warning('**** Too many noisy trials!!! ****');
-end
 chan_keep = epochdata.label;
 chan_keep((ismember(epochdata.label(:,1),chan_rej(:,1))))=[];
 cfg = [];

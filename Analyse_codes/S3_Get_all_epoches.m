@@ -3,7 +3,7 @@
 % % % event
 
 function S3_Get_all_epoches(server,sid)
-TaskId = [1 3];%DataSets = {'sv','of','fa'}; 'sv and of' tasks are combined in 1st task 
+TaskId = [1 3];%DataSets = {'sv','of','fa'}; 'sv and of' tasks are combined in 1st task
 
 %%% set paths
 if server
@@ -21,8 +21,8 @@ RunCond = 'WrdOn'; %%'WrdOff';%%% epoch aligned with RunCond
 PPara.filename = RunCond;
 AnaTW = 1000;
 epoch_select = 'abs(PPara.event_all(:,3))<2'; %% select: n-1,n,n+1
-DoBaseline = 1; % get epochs for baseline period
-
+DoBaseline = 0; % get epochs for baseline period
+ica = 0; % remove ica components
 %%% get file names
 load([rootdir 'Analyse_data' filesep 'ExpInfo.mat']);
 DataSets = ExpInfo.DSName;
@@ -38,49 +38,49 @@ for ddd = TaskId
     PPath.SaveData = [rootdir 'Analyse_data' filesep DS '_' sub filesep];
     
     %% ========== artefacts removal based on ICA components after preprocessing
-    load([PPath.SaveData 'ica']); %'data4ICA','comp'
-    
-    %%% plot the components for visual inspection
-    figure
-    cfg           = [];
-    cfg.component = 1:30;       % specify the component(s) that should be plotted
-    cfg.layout    = 'neuromag306mag.lay'; % specify the layout file that should be used for plotting
-    cfg.comment   = 'no';
-    ft_topoplotIC(cfg, comp)
-    colormap jet;
-    
-    %%% identifying components
-    cfg            = [];
-    cfg.channel    = 1:15;
-    cfg.continuous = 'no';
-    cfg.viewmode   = 'component';
-    cfg.layout     = 'neuromag306mag.lay';
-    ft_databrowser(cfg, comp);
-    colormap jet;
-    
-    %%% rejecting components back to the un-down-sampling data
-    cfg = [];
-    cfg.component = input('component(s) ID that needed to be removed []: ');
-    data4ICA = ft_rejectcomponent(cfg, comp, data4ICA);
-    clear comp
-    
-    %%% put the ica clean epoch data back to the raw data
-    load([PPath.SaveData 'data']); %raw meg data
-    load([PPath.SaveData 'hdr']); %meg hdr
-    validmegid = cellfun(@(x) find(strcmp({x},hdr.label)),data4ICA.label);
-    trig = data4ICA.sampleinfo;
-    for i = 1:size(trig,1)
-        data(validmegid,trig(i,1):trig(i,2)) = data4ICA.trial{i};
+    if ica
+        load([PPath.SaveData 'ica']); %'data4ICA','comp','Trig'
+        
+        %%% plot the components for visual inspection
+        figure
+        cfg           = [];
+        cfg.component = 1:30;       % specify the component(s) that should be plotted
+        cfg.layout    = 'neuromag306mag.lay'; % specify the layout file that should be used for plotting
+        cfg.comment   = 'no';
+        ft_topoplotIC(cfg, comp)
+        colormap jet;
+        
+        %%% identifying components
+        cfg            = [];
+        cfg.channel    = 1:15;
+        cfg.continuous = 'no';
+        cfg.viewmode   = 'component';
+        cfg.layout     = 'neuromag306mag.lay';
+        ft_databrowser(cfg, comp);
+        colormap jet;
+        
+        %%% rejecting components back to the un-down-sampling data
+        cfg = [];
+        cfg.component = input('component(s) ID that needed to be removed []: ');
+        data4ICA = ft_rejectcomponent(cfg, comp, data4ICA);
+        clear comp
+        
+        %%% put the ica clean epoch data back to the raw data
+        load([PPath.SaveData 'data']); %raw meg data
+        load([PPath.SaveData 'hdr']); %meg hdr
+        validmegid = cellfun(@(x) find(strcmp({x},hdr.label)),data4ICA.label);
+        for i = 1:length(Trig.fixon)
+            data(validmegid,Trig.fixon(i):Trig.sentoff(i)) = data4ICA.trial{i};
+        end
+        save([PPath.SaveData 'data_icaclean.mat'], 'data','-v7.3')
+        clear data4ICA
+        
+        % delete ica.mat
+        delete([PPath.SaveData 'ica.mat']); %'data4ICA','comp','Trig'
+    else
+        load([PPath.SaveData 'data_icaclean.mat']); % data
+        load([PPath.SaveData 'hdr']); %meg hdr
     end
-    save([PPath.SaveData 'data_icaclean.mat'], 'data','-v7.3')
-    clear data4ICA
-    
-    % delete ica.mat
-    delete([PPath.SaveData 'ica.mat']); %'data4ICA','comp'
-    %delete Trigger_MEG when possible since it has been stored in Event
-    % for unexpected broken data: delete raw meg data since we've got data_icaclean
-    delete([PPath.SaveData 'Trigger_MEG.mat'])
-    delete([PPath.SaveData 'data.mat']);
     
     %% ================epoching
     load([PPath.SaveData 'Event'])
@@ -90,7 +90,6 @@ for ddd = TaskId
     trig_col = find(strcmp(Event.event_raw_header,PPara.timezero));
     fixdur_col = find(strcmp(Event.event_raw_header,'fixation_duration'));
     cond_col = find(strcmp(Event.event_raw_header,'SentenceCondition'));
-    firstfix_col = strcmp(Event.event_raw_header,'FirstPassFix');
     
     %%%% get the baseline epochs
     if DoBaseline
@@ -111,15 +110,13 @@ for ddd = TaskId
     PPara.posttrig = AnaTW/2;
     tw = [80 AnaTW];
     validduration = Event.event_raw(:,fixdur_col)>= tw(1) & Event.event_raw(:,fixdur_col)<= tw(2);
-    firstfix =  Event.event_raw(:,firstfix_col)== 1;
-    PPara.event_all = Event.event_raw(validduration & firstfix,:);
+    PPara.event_all = Event.event_raw(validduration,:);
     eval(['PPara.event_all = PPara.event_all(' epoch_select ',:);']);
     %%%% change the fixation onset trigger to fixation offset
     if contains(RunCond,'Off')
         PPara.event_all(:,trig_col) = PPara.event_all(:,trig_col) + PPara.event_all(:,fixdur_col);
     end
-    [epoch,ValidTrlPerct] = Get_Epoch(hdr,data,PPara,trig_col);
-    eval(['ExpInfo.ValidTrlPerct.' DS '(sid,1) = ValidTrlPerct;']);
+    epoch = Get_Epoch(hdr,data,PPara,trig_col);
     save('Z:\Semantic\Analyse_data\ExpInfo.mat','ExpInfo')
     
     %%% seperate epochs into 2 tasks and save them out
@@ -152,10 +149,13 @@ for ddd = TaskId
         path_task_2 = [rootdir 'Analyse_data' filesep DataSets{2} '_' sub filesep];
         mkdir(path_task_2);
         save([path_task_2 'epoch_' PPara.filename],'epoch','-v7.3');
-        save([path_task_2 'epoch_BL_Cross'],'epoch_BL_Cross','-v7.3');
+        if DoBaseline
+            save([path_task_2 'epoch_BL_Cross'],'epoch_BL_Cross','-v7.3');
+        end
     end
     save([rootdir 'Analyse_data' filesep 'ExpInfo.mat'],'ExpInfo');
     disp(['*** epoching done! ' DS '---' sub]);
+    clear data
 end
 
 

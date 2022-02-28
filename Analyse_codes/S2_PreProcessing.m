@@ -6,7 +6,6 @@ function S2_PreProcessing(sid) %id of sub
 % number of .fif files in SV task
 TaskId = [1 3]; %DataSets = {'sv','of','fa'}; 'sv and of' tasks are combined in 1st task
 
-
 %%% set paths
 server = 1;
 if server
@@ -28,6 +27,7 @@ PPara.bpfilter   = 'yes';
 PPara.bpfreq     = [0.5 100];
 PPara.detrend    = 'yes';
 PPara.SR         = 1000;
+PPara.pretrig    = 0; % for randomly epoching data during ica
 % % %%% parameters for OPTICAT
 % % PPara.OPTICAT    = 0;
 % % PPara.hpfilter   = 'yes';% high-pass filter for OPTICAT
@@ -46,6 +46,7 @@ for ddd = TaskId
     eval(['PTBFiles = ExpInfo.PTBFiles.' DS ';']);
     eval(['EyeFiles = ExpInfo.EyeFiles.' DS ';']);
     sub = subjects{sid};
+    
     % get tracked eye of eye-link, 'L' or 'R'
     if any(strcmp(ExpInfo.TrackRightEye,sub))
         TrackedEye = 'R';  
@@ -109,17 +110,18 @@ for ddd = TaskId
     save([PPath.SaveData 'Event'],'Event','-v7.3');
    
     %% remove artefacts with ICA on server
-    % just run ica for the exp data, excluding the hpi signal at the begining
-    % and the end of exp
-    PPara.icastart = Trigger_MEG(1,2);
-    PPara.cutlen4ica = 2^(nextpow2(4*PPara.SR));%random length for epoching in ica
-    PPara.icaend = Trigger_MEG(end,2)+PPara.cutlen4ica;
-% %     if PPara.OPTICAT == 1
+    %%% get the data purely during sentence reading
+    PPara.fixon = Trigger_MEG(Trigger_MEG(:,1)==ExpInfo.Trigger.Fix ,2); %% fixation onset
+    PPara.sentoff = Trigger_MEG(Trigger_MEG(:,1)==ExpInfo.Trigger.SentOff ,2); %% sentence offset
+    if length(PPara.fixon) ~= length(PPara.sentoff)
+        error('inconsistent number of triggers for fixation onset and offset, please check!');
+    end
+   % %     if PPara.OPTICAT == 1
 % %         PPara.trig_sac = Event.event_raw(:,7)+Event.event_raw(:,8); % para for OPTICAT, trigger for saccade onset/fixation offset of a given word
 % %         PPara.sac_epoch = [-0.02 0.01]; % duration for saccade_related_epochs, unit in s
 % %     end
-    [data4ICA, comp] = ICA4rawdata(PPara,hdr,data);
-    save([PPath.SaveData 'ica.mat'],'data4ICA','comp','-v7.3')
+    [data4ICA, comp, Trig] = ICA4rawdata(PPara,hdr,data);
+    save([PPath.SaveData 'ica.mat'],'data4ICA','comp','Trig','-v7.3')
     
     disp(['*** PreProcessing done! ' DS '---' sub]);
 end

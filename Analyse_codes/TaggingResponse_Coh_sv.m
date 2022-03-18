@@ -484,7 +484,6 @@ else  %%%server == 0
     cfg =[];
     cfg.layout = 'neuromag306mag.lay'; %'neuromag306cmb.lay';
     cfg.comment = ' ';
-    %     cfg.gridscale = 300;
     ft_topoplotER(cfg,erf);
     colormap jet; colorbar('FontWeight','bold','FontSize',10);
     caxis([-max(tmp) max(tmp)])
@@ -527,34 +526,48 @@ else  %%%server == 0
         eval(['TagCoh.' EpochType{mm} '_Ttest = stats;'])
     end
     
-    %%%%======= violin plot of the word-freq effect on coherence
+    %% %%======= violin plot of the word-freq effect on coherence
     colmat = [0 114 189;217 83 25]./255;
     figtitle = 'Ttest_Freq_violin';
     nsigsub = size(TagCoh.PreTarg_Ttest.data4test,1);
     group = [cellstr(repmat('Incong',nsigsub,1)); cellstr(repmat('Cong',nsigsub,1))];
     grouporder={'Incong','Cong'};
-    figure('Name',figtitle,'color',[1 1 1],'Position',[1 1 1000 300]);
-    for eee = 1:length(EpochType)
-        eval(['vdata = [TagCoh.' EpochType{eee} '_Ttest.data4test(:,1); TagCoh.' EpochType{eee} '_Ttest.data4test(:,2)];']);
-        h = subplot(1,length(EpochType),eee);
+    EpochType = {'PreTarg','Targ'};
+    subtitles = {'Pre-target interval','Target interval'};
+    figure('Name',figtitle,'color',[1 1 1],'Position',[100 100 450 250]);
+    for mmm = 1:length(EpochType)
+        eval(['vdata = [TagCoh.' EpochType{mmm} '_Ttest.data4test(:,1); TagCoh.' EpochType{mmm} '_Ttest.data4test(:,2)];']);
+        h = subplot(1,length(EpochType),mmm);
         vp = violinplot(vdata, group,'GroupOrder',grouporder);
         vp(1).ViolinColor = colmat(1,:);
         vp(2).ViolinColor = colmat(2,:);
-        ylabel('Coherence (r)','FontSize',16,'FontWeight','bold');
-        set(gca,'FontSize',12,'FontWeight','bold');
-        set(gca,'box','off','LineWidth',2)
-        yyy = get(h,'ylim');
-        eval(['pvalue = TagCoh.' EpochType{eee} '_Ttest.p;']);
-        title([EpochType{eee} 'et ' 'p = ' num2str(round(1000*pvalue)/1000)],'FontSize',16,'FontWeight','bold');
+        vp(1).ShowMean = 1; vp(2).ShowMean = 1;
+        vp(1,1).MedianPlot.Visible = 'off';
+        vp(1,2).MedianPlot.Visible = 'off';
+        vp(1,1).MeanPlot.LineWidth = 1.5;
+        vp(1,2).MeanPlot.LineWidth = 1.5;
+        vp(1,1).BoxWidth = 0.01; vp(1,2).BoxWidth = 0.01;
+        ylabel('Coherence at 60 Hz (r^2)','FontSize',7,'FontWeight','normal','FontName','Arial');
+        xlabel('Semantic congruency of target','FontSize',7,'FontWeight','normal');
+        set(gca,'FontSize',7,'FontWeight','normal','FontName','Arial');
+        set(gca,'box','off','LineWidth',1)
         %%% plot the line linking each subject
         hold on;
         x1 = vp(1,1).ScatterPlot.XData;
         y1 = vp(1,1).ScatterPlot.YData;
         x2 = vp(1,2).ScatterPlot.XData;
         y2 = vp(1,2).ScatterPlot.YData;
-        plot([x1; x2],[y1; y2],'Color',[.7 .7 .7])
+        plot([x1; x2],[y1; y2],'Color',[.8 .8 .8],'linewidth',0.5)
+        %%% add stat
+        if mmm == 1
+            plot([1 2],[0.065 0.065],'k','LineWidth',1)
+            text(1.5,0.061,'*','FontWeight','normal','FontSize',14,'FontName','Arial')
+        else
+            plot([1 2],[0.065 0.065],'k','LineWidth',1)
+            text(1.5,0.063,'n.s.','FontWeight','normal','FontSize',7,'FontName','Arial')
+        end
+        title(subtitles{mmm},'FontSize',7,'FontWeight','normal','FontName','Arial');
     end
-    xlabel('Semantic conditions for Target','FontSize',16,'FontWeight','bold');
     set(gcf, 'renderer', 'painters')
     saveas(h,[PPath.FigPath figtitle]);
     saveas(h,[PPath.FigPath figtitle],'svg');
@@ -640,45 +653,46 @@ else  %%%server == 0
     %% === plot the group level curve with sig, only for HM (half-maximum)
     %%% PreTarg_HM_tim_tvalue=2.17,threshold for p=0.05 is
     %%% t=2.045(two-tail,n=29)
-    
     curve_xmax = 0.4; %%% the x-axis range
     etp = find(TagCoh.time < curve_xmax); %%% rt window aligned with zero--saccadeonset
     zero_tp = nearest(TagCoh.time,0);
     tprange = zero_tp:etp(end);
     timrange = TagCoh.time(tprange);
-    cohdata_all = TagCoh.PreTarg_Coh_TimSubCond(tprange,:,[2 3]); %% time*sub*cond
-    meanRFT = squeeze(mean(cohdata_all,2));
-    seRFT = squeeze(nanstd(cohdata_all,0,2)./sqrt(length(sigsubid)));
-    HM = TagCoh.Jackknife_latency.PreTarg_HM_tim(end,:,1);
-    colmat = [0 114 189;217 83 25]./255;
-    %%%% figure
-    figtitle = 'PreTarget coherence onset latency';
-    h = figure('Name',figtitle,'color',[1 1 1]);
-    a = shadedErrorBar(timrange,meanRFT(:,1),seRFT(:,1),{'color',colmat(1,:)},0.8);hold on;
-    b = shadedErrorBar(timrange,meanRFT(:,2),seRFT(:,2),{'color',colmat(2,:)},0.9);
-    a.mainLine.LineWidth = 2;
-    b.mainLine.LineWidth = 2;
-    legendflex([a.mainLine,b.mainLine],{'Incong';'Cong'},'anchor', {'ne','ne'}, 'buffer', [0 0],'FontWeight','bold','Fontsize',12,'xscale',1,'box','off');
-    text(0.26,0.044,['t = ' num2str(round(100*TagCoh.Jackknife_latency.PreTarg_HM_tim_tvalue)/100) ', p < 0.05'],'FontWeight','bold','FontSize',12);
-    set(gca,'FontSize',12,'FontWeight','bold');
-    set(gca,'box','off','LineWidth',2)
-    set(gca,'XTick',0:0.05:0.4);
-    set(gca,'XTickLabel',{'FixOn','0.05','0.1','0.15','0.2','0.25','0.3','0.35','0.4'},'FontWeight','bold','FontSize',12)
-    set(gca,'YTick',0.01:0.01:0.06);
-    title(figtitle,'FontWeight','bold','FontSize',16)
-    xlabel('Time (ms)','FontWeight','bold','FontSize',16)
-    ylabel('Coherence (r)','FontWeight','bold','FontSize',16)
-    %%% plot the latency lines
-    hold on;
-    timeliney = get(gca,'ylim');
-    timelinex = repmat(HM(1),1,2);
-    plot(timelinex', timeliney','--','color',colmat(1,:),'LineWidth',2);
-    timelinex = repmat(HM(2),1,2);
-    plot(timelinex', timeliney','--','color',colmat(2,:),'LineWidth',2);
-    set(gcf, 'renderer', 'painters')
-    saveas(h,[PPath.FigPath figtitle]);
-    saveas(h,[PPath.FigPath figtitle],'svg');
-    
+    figtitles = {'Pre-target','Target'};
+    EpochType = {'PreTarg','Targ'};
+    for mmm = 1:length(EpochType)
+        eval(['cohdata_all = TagCoh.' EpochType{mmm} '_Coh_TimSubCond(tprange,:,[2 3]);']); %% time*sub*cond
+        meanRFT = squeeze(mean(cohdata_all,2));
+        seRFT = squeeze(nanstd(cohdata_all,0,2)./sqrt(length(TagCoh.SigSubID)));
+        eval(['HM = TagCoh.Jackknife_latency.' EpochType{mmm} '_HM_tim(end,:,1);']);
+        colmat = [0 114 189;217 83 25]./255;
+        %%%% figure
+        figtitle = [figtitles{mmm} ' coherence onset latency'];
+        h = figure('Name',figtitle,'color',[1 1 1],'Position',[100 100 220 240]);
+        a = shadedErrorBar(timrange,meanRFT(:,1),seRFT(:,1),{'color',colmat(1,:)},0.8);hold on;
+        b = shadedErrorBar(timrange,meanRFT(:,2),seRFT(:,2),{'color',colmat(2,:)},0.9);
+        a.mainLine.LineWidth = 1;
+        b.mainLine.LineWidth = 1;
+        legendflex([a.mainLine,b.mainLine],{'Incong';'Cong'},'anchor', {'ne','ne'}, 'buffer', [0 0],'Fontsize',7,'xscale',1,'box','off');
+        set(gca,'FontSize',7,'FontWeight','normal');
+        set(gca,'box','off','LineWidth',1)
+        set(gca,'XTick',0:0.05:0.4);
+        set(gca,'XTickLabel',{'FixOn','0.05','0.1','0.15','0.2','0.25','0.3','0.35','0.4'},'FontSize',7)
+        set(gca,'YTick',0.01:0.01:0.06);
+        title(figtitle,'FontSize',7,'FontWeight','normal')
+        xlabel('Time (s)','FontSize',7,'FontWeight','normal')
+        ylabel('Coherence at 60 Hz (r^2)','FontSize',7,'FontWeight','normal','FontName','Arial');
+        %%% plot the latency lines
+        hold on;
+        timeliney = get(gca,'ylim');
+        timelinex = repmat(HM(1),1,2);
+        plot(timelinex', timeliney','--','color',colmat(1,:),'LineWidth',1);
+        timelinex = repmat(HM(2),1,2);
+        plot(timelinex', timeliney','--','color',colmat(2,:),'LineWidth',1);
+        set(gcf, 'renderer', 'painters')
+        saveas(h,[PPath.FigPath figtitle]);
+        saveas(h,[PPath.FigPath figtitle],'svg');
+    end
     
     
     

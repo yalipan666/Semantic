@@ -1,7 +1,7 @@
 %%% edit: Yali Pan, 20210706, Just a quick check of the tag signal
 
 %%% get sub_information
-subjects = {'20211028_b3b9';'20211028_b4c2'};
+subjects = {'20211111_b395';'20211111_b4c0'};
 %%%% addpath fieldtrip
 addpath Z:\fieldtrip-20200220\
 ft_defaults
@@ -56,7 +56,7 @@ for sss = 1:length(subjects)
             clear data2 Trigger_MEG2 event event2
         end
         
-        %%%%%%%%%%%%%%%%%%%%%%%%%%%% normalizing all the photodiode
+        %%%%% normalizing all the photodiode
         pd = find(strcmp(hdr.label,'MISC004'));
         data(pd,:) = zscore(data(pd,:),0,2);
         
@@ -94,9 +94,8 @@ for sss = 1:length(subjects)
         cfg.method  = 'mtmfft';
         cfg.taper   = 'hanning';
         cfg.foi     = 55:1:65;
-        fourier=ft_freqanalysis(cfg,epoch_all); %=% tfr.powspctrm:3D data: trialnum*channelnum*freqpoint
+        fourier     = ft_freqanalysis(cfg,epoch_all); %=% tfr.powspctrm:3D data: trialnum*channelnum*freqpoint
         
-        %%% statistical test of coherence
         %%%======= get coherence spctrm
         cfg            = [];
         cfg.method     = 'coh';

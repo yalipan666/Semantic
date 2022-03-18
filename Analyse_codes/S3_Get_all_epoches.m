@@ -3,7 +3,7 @@
 % % % event
 
 function S3_Get_all_epoches(server,sid)
-TaskId = [1 3];%DataSets = {'sv','of','fa'}; 'sv and of' tasks are combined in 1st task
+TaskId = 1; %[1 3]; DataSets = {'sv','of','fa'}; 'sv and of' tasks are combined in 1st task
 
 %%% set paths
 if server
@@ -17,7 +17,7 @@ else
 end
 
 %%% basic settingup
-RunCond = 'WrdOn'; %%'WrdOff';%%% epoch aligned with RunCond
+RunCond = 'WrdOn'; %%'WrdOn';%%% epoch aligned with RunCond
 PPara.filename = RunCond;
 AnaTW = 1000;
 epoch_select = 'abs(PPara.event_all(:,3))<2'; %% select: n-1,n,n+1
@@ -117,7 +117,6 @@ for ddd = TaskId
         PPara.event_all(:,trig_col) = PPara.event_all(:,trig_col) + PPara.event_all(:,fixdur_col);
     end
     epoch = Get_Epoch(hdr,data,PPara,trig_col);
-    save('Z:\Semantic\Analyse_data\ExpInfo.mat','ExpInfo')
     
     %%% seperate epochs into 2 tasks and save them out
     if ddd == 3

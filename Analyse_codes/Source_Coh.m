@@ -23,97 +23,89 @@ conds = ExpInfo.CondID{ddd};
 tag_col = find(strcmp(ExpInfo.EventHdr,'loc2targ'));
 tagsigsub = ExpInfo.TagSigSubID.sv;
 
-% % %% prepare headmodel
-% % % copy shared headmodel between studies
-% % for p = 1:length(ExpInfo.MRIcode)
-% %     if ~strcmp(ExpInfo.MRIcode{p}, 'nan')
-% %         tmp = find(strcmp(ExpInfo.MRIcode{p},SubInfo.MEGcode_MRIcode(:,2)));
-% %         if ~isempty(tmp)
-% %             display(['megsub:' num2str(p)])
-% %             load(['Z:\Lexical\Results\source_modeling\HeadModel\Hdm_MRIaligned_' SubInfo.MEGcode_MRIcode{tmp,1} '.mat']);
-% %             save([PPath.hdm filesep 'Hdm_MRIaligned_' ExpInfo.subjects.sv{p,1}],'hdm','mri_aligned')
-% %         end
-% %     end
-% % end
-% % % only hdm of sub7 is shared between projects
-% % for sss = 1:length(subjects)
-% %     disp(['******* analyzing sub-' num2str(sss) '******'])
-% %     sub = subjects{sss};
-% %     % make sure the same number of subjects
-% %     if length(subjects) ~= length(ExpInfo.MRIcode)
-% %         error('number of subjects in MEG data and MRI data does not match!')
-% %     end
-% %         
-% %     %%%%%===== read MRI
-% %     mri_code = ExpInfo.MRIcode{sss,1};
-% %     if strcmp(mri_code, 'nan') % no native mri, use standard mri instead
-% %         [~, ftdir] = ft_version;
-% %         templatedir = fullfile(ftdir, 'template', 'headmodel');
-% %         mri = ft_read_mri(fullfile(templatedir, 'standard_mri.mat'));
-% %     else
-% %         niifile = [PPath.MRIPath mri_code '_nifti' filesep ExpInfo.MRIcode{sss,1} '_nifti' filesep 'T1_vol_v1_5.nii'];
-% %         if ~exist(niifile,'file')
-% %             niifile(end-4) = '9';
-% %             if  ~exist(niifile,'file')
-% %                 niifile(end-4) = '5';
-% %                 niifile = [niifile '.gz'];
-% %                 files = gunzip(niifile);
-% %                 niifile = niifile{1};
-% %             end
-% %         end
-% %         mri = ft_read_mri(niifile);
-% %     end
-% %     %%%%%===== automatic alignment align MRI and polhemus
-% %     %%% read headshape
-% %     %%% plot to check the alignment between headshape and mri
-% %     megfile = [PPath.MEGPath sub filesep sub(3:8) filesep sub(end-3:end) '-1.fif'];
-% %     meg_headshape = ft_read_headshape(megfile);
-% %     
-% %     %%% realign MEG head and mri ---enter 'n'
-% %     cfg = [];
-% %     cfg.method                = 'headshape';
-% %     cfg.headshape.headshape   = meg_headshape;
-% %     cfg.coordsys              = 'neuromag';
-% %     cfg.headshape.interactive = 'yes'; %% 'yes'
-% %     cfg.viewresult            = 'no'; %% 'yes'
-% %     cfg.headshape.icp         = 'yes';
-% %     mri_aligned = ft_volumerealign(cfg, mri);
-% %     mri_aligned.coordsys = 'neuromag';
-% %     clear mri
-% %     %%% enter 'n'
-% % % % %     %%%	对准 MRI 和 MEG 头坐标
-% % % % % 	• 对话框中的坐标和参数是控制MRI头的运动的
-% % % % % 	• rotate：    +       -    [-18 0 0]  
-% % % % %           ○ x：向后仰  向前仰            
-% % % % %           ○ y：向左下转  向右下转 (不倒翁)
-% % % % %           ○ z：向右后旋  向左后旋 (猫头鹰)
-% % % % % 	• translate：平移，将3D坐标系旋转到2维视图，当前的坐标轴就表示平移的方向和大小   [-2 0 40]
-% % % % % 	• --- apply --- quit
-% % 
-% %     %%%%%===== volume segmentation
-% %     %%% Each of the voxels of the anatomical MRI is assigned to a tissue class, this procedure is termed segmentation.
-% %     cfg          = [];
-% %     segmentedmri = ft_volumesegment(cfg, mri_aligned);
-% %     
-% %     %%% check segmentation!
-% %     % add anatomical information to the segmentation
-% %     segmentedmri.transform = mri_aligned.transform;
-% %     segmentedmri.anatomy   = mri_aligned.anatomy;
-% %     
-% %     % % %             %%% plot to check
-% %     % % %             cfg              = [];
-% %     % % %             cfg.funparameter = 'gray';
-% %     % % %             ft_sourceplot(cfg, segmentedmri);
-% %     
-% %     %%%%%===== prepare the headmodel
-% %     cfg        = [];
-% %     cfg.method = 'singleshell';
-% %     hdm        = ft_prepare_headmodel(cfg, segmentedmri);
-% %     clear segmentedmri
-% %     
-% %     %%% saveout the hdm and mri_aligned
-% %     save([PPath.hdm filesep 'Hdm_MRIaligned_' sub],'hdm','mri_aligned')
-% % end
+%% prepare headmodel
+% load the hdm of repeated subs between studies(% only hdm of sub7 is shared
+% between projects)
+for p = 1:length(ExpInfo.MRIcode)
+    if ~strcmp(ExpInfo.MRIcode{p}, 'nan')
+        tmp = find(strcmp(ExpInfo.MRIcode{p},SubInfo.MEGcode_MRIcode(:,2)));
+        if ~isempty(tmp)
+            display(['megsub:' num2str(p)])
+            load(['Z:\Lexical\Results\source_modeling\HeadModel\Hdm_MRIaligned_' SubInfo.MEGcode_MRIcode{tmp,1} '.mat']);
+            save([PPath.hdm filesep 'Hdm_MRIaligned_' ExpInfo.subjects.sv{p,1}],'hdm','mri_aligned')
+        end
+    end
+end
+
+for sss = 1:length(subjects)
+    disp(['******* analyzing sub-' num2str(sss) '******'])
+    sub = subjects{sss};
+    % make sure the same number of subjects
+    if length(subjects) ~= length(ExpInfo.MRIcode)
+        error('number of subjects in MEG data and MRI data does not match!')
+    end
+        
+    %%%%%===== read MRI
+    mri_code = ExpInfo.MRIcode{sss,1};
+    if strcmp(mri_code, 'nan') % no native mri, use standard mri instead
+        [~, ftdir] = ft_version;
+        templatedir = fullfile(ftdir, 'template', 'headmodel');
+        mri = ft_read_mri(fullfile(templatedir, 'standard_mri.mat'));
+    else
+        niifile = [PPath.MRIPath mri_code '_nifti' filesep ExpInfo.MRIcode{sss,1} '_nifti' filesep 'T1_vol_v1_5.nii'];
+        if ~exist(niifile,'file')
+            niifile(end-4) = '9';
+            if  ~exist(niifile,'file')
+                niifile(end-4) = '5';
+                niifile = [niifile '.gz'];
+                files = gunzip(niifile);
+                niifile = niifile{1};
+            end
+        end
+        mri = ft_read_mri(niifile);
+    end
+    %%%%%===== automatic alignment align MRI and polhemus
+    %%% read headshape
+    %%% plot to check the alignment between headshape and mri
+    megfile = [PPath.MEGPath sub filesep sub(3:8) filesep sub(end-3:end) '-1.fif'];
+    meg_headshape = ft_read_headshape(megfile);
+    
+    %%% realign MEG head and mri ---enter 'n'
+    cfg = [];
+    cfg.method                = 'headshape';
+    cfg.headshape.headshape   = meg_headshape;
+    cfg.coordsys              = 'neuromag';
+    cfg.headshape.interactive = 'yes';  
+    cfg.viewresult            = 'no';  
+    cfg.headshape.icp         = 'yes';
+    mri_aligned = ft_volumerealign(cfg, mri);
+    mri_aligned.coordsys = 'neuromag';
+    clear mri
+    %%% enter 'n'
+    %%%%%===== volume segmentation
+    %%% Each of the voxels of the anatomical MRI is assigned to a tissue class, this procedure is termed segmentation.
+    cfg          = [];
+    segmentedmri = ft_volumesegment(cfg, mri_aligned);
+    
+    %%% check segmentation!
+    % add anatomical information to the segmentation
+    segmentedmri.transform = mri_aligned.transform;
+    segmentedmri.anatomy   = mri_aligned.anatomy;
+    
+    % % %             %%% plot to check
+    % % %             cfg              = [];
+    % % %             cfg.funparameter = 'gray';
+    % % %             ft_sourceplot(cfg, segmentedmri);
+    
+    %%%%%===== prepare the headmodel
+    cfg        = [];
+    cfg.method = 'singleshell';
+    hdm        = ft_prepare_headmodel(cfg, segmentedmri);
+    clear segmentedmri
+    
+    %%% saveout the hdm and mri_aligned
+    save([PPath.hdm filesep 'Hdm_MRIaligned_' sub],'hdm','mri_aligned')
+end
 
 
 %% source modeling for the coherence results using DICS

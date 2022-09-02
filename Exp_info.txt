@@ -28,6 +28,11 @@ cfg.TriggerOpenEye = 64;
 cfg.TriggerCloseEye = 128;  
 cfg.TriggerPureTagOn = 32;   % tagging on in the pure tagging task
 
+% presentation settings for semantic:
+Courier New font with 20 size in bold black
+0.316 degrees visual angel for per letter and space
+
+
 % Timing
 cfg.fix_t = 1.2;%Duration (s) of the fixation
 cfg.fix_jitter = 0.4; %Baseline jitter
@@ -51,9 +56,13 @@ fixation duration range: [80 1000]ms
 epoch: [-500 500]ms aligned with fixation onset to a given word
 baseline: [0 1000]ms, aligned with cross onset
 
+% coherence
+5000 permutations
+p = 0.01 for sensor selection (pre-target cohenrece is stronger than baseline coherence)
+
 % ERF
 lowpass filter: 35Hz
-demean: yes
+demean: yes % just mean baseline correct. % whether to apply baseline correction  
 baseline correction: [-0.2 0]
 
 

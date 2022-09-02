@@ -10,7 +10,7 @@ function EyeData = Get_EyeData(eyefile, WordLocMat,Trigger,TrackedEye)
 % TrackedEye: the eye that was tracked by eye-tracker, 'L' or 'R'
 
 tic
-%%% Get important event details from eyelink file
+%%% Get important event details from eyelink file 
 if isempty(eyefile)
     error('No eyelink files found..');
 end

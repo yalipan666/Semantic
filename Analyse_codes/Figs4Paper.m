@@ -47,9 +47,9 @@ for ff = 1:length(FigNam)
 end
 
 
-%% %%======= violin plot of the word-freq effect on coherence
+%% %%======= violin plot of the effect on coherence
 colmat = [0 114 189;217 83 25]./255;
-figtitle = 'Ttest_Freq_violin';
+figtitle = 'Ttest_Coh_violin';
 nsigsub = size(TagCoh.PreTarg_Ttest.data4test,1);
 group = [cellstr(repmat('Incong',nsigsub,1)); cellstr(repmat('Cong',nsigsub,1))];
 grouporder={'Incong','Cong'};
@@ -102,13 +102,17 @@ diff_pre = TagCoh.PreTarg_Ttest.data4test(:,1)-TagCoh.PreTarg_Ttest.data4test(:,
 diff_tar = TagCoh.Targ_Ttest.data4test(:,1)-TagCoh.Targ_Ttest.data4test(:,2);
 data{1,1} = diff_pre;
 data{2,1} = diff_tar;
+
+raincloud_plot(diff_pre, 'box_on', 1, 'box_dodge', 1, 'box_dodge_amount',...
+0, 'dot_dodge_amount', .3, 'color', colmat, 'cloud_edge_col', colmat);
+
 h = rm_raincloud(data, colmat);
-set(gca, 'XLim', [-0.01 0.08]);
+set(gca, 'XLim', [-0.03 0.03]);
 
 
 %% scatter plot for coherence diff
 figtitle = 'Ttest_diff_scatter';
-figure('Name',figtitle,'color',[1 1 1],'Position',[100 100 170 250]);
+figure('Name',figtitle,'color',[1 1 1],'Position',[100 100 280 320]);
 diff_pre = TagCoh.PreTarg_Ttest.data4test(:,1)-TagCoh.PreTarg_Ttest.data4test(:,2);
 diff_tar = TagCoh.Targ_Ttest.data4test(:,1)-TagCoh.Targ_Ttest.data4test(:,2);
 ydata = [diff_pre diff_tar];
@@ -116,15 +120,19 @@ ydata = [diff_pre diff_tar];
 xdata = repmat(1:c, r, 1);
 % for explanation see 
 % http://undocumentedmatlab.com/blog/undocumented-scatter-plot-jitter
-scatter(xdata(:), ydata(:), 20,[0.5 0.5 0.5], 'jitter','on', 'jitterAmount', 0.05);
+scatter(xdata(:), ydata(:),8,[0.5 0.5 0.5],'filled', 'jitter','on', 'jitterAmount', 0.1);
+xlim([0.5 2.5])
 hold on;
-plot([xdata(1,:)-0.3; xdata(1,:) + 0.3], repmat(mean(ydata, 1), 2, 1), 'k-','LineWidth',1)
+stdY = [std(diff_pre) std(diff_tar)]./sqrt(size(diff_pre,1));
+errorbar(xdata(1,:)+0.2,mean(ydata,1)',stdY,'ko')
 ylabel('coherence at 60 Hz (r2, incong-cong)','FontSize',7,'FontWeight','normal','FontName','Arial');
 xticks([1 2]);
 xticklabels({'Pre-target','target'});
 set(gcf, 'renderer', 'painters')
 saveas(gcf,figtitle);
 saveas(gcf,[figpath figtitle],'svg');
+
+
 
 
 %% bar with error plot for the coherence diff
@@ -262,11 +270,6 @@ end
 set(gcf, 'renderer', 'painters')
 saveas(gcf,'Avg_FRFs');
 saveas(gcf,'Avg_FRFs','svg');
-
-
-
-
-
 
 
 

@@ -2,6 +2,11 @@
 % 20210719 clear functions to make scripts more concise
 
 function epoch_sumrj = Get_Epoch(hdr,data,PPara,trig_col)
+global rejectvisual
+if ~exist('rejectvisual','var')
+    rejectvisual = 1; %reject bad trials by visual inspection or not
+    % if don't want to do visual rejection, set rejectvisual as global var
+end
 %%% get raw epoch
 epoch = []; %time zero is 'fixation_on_MEG'
 if isempty(trig_col)
@@ -28,7 +33,7 @@ epochdata.time = epoch.time;
 
 %% preprocessing
 %%% get bad channels
-keepchan = {'MEG','MISC004','MISC005'};
+keepchan = {'MEG','MISC004'};
 for cc = 1:length(PPara.badsens)
     keepchan{length(keepchan)+1} = ['-MEG' PPara.badsens{cc}];
 end
@@ -43,9 +48,13 @@ cfg.channel = 'MEGGRAD';
 data_planar = ft_selectdata(cfg,epochdata);
 
 %%% remove bad sensors and trials using ft_rejectvisual
-cfg=[];
-cfg.method  = 'summary';
-tempdata_rjv_planar = ft_rejectvisual(cfg, data_planar);
+if rejectvisual
+    cfg=[];
+    cfg.method  = 'summary';
+    tempdata_rjv_planar = ft_rejectvisual(cfg, data_planar);
+else
+    tempdata_rjv_planar = data_planar;
+end
 
 %%% make a list of the planar gradiometers to keep
 oldtrig = tempdata_rjv_planar.trialinfo(:,trig_col);

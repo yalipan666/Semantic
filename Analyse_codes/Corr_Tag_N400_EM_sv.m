@@ -200,15 +200,23 @@ saveas(h,[Path.Result 'TagPre_N400Targ']);
 
 
 
+%% corr of slow and fast readers
+load('Z:\Semantic\Results\sv\Coh\TagCoh.mat')
+load('Z:\Semantic\Results\sv\Behav\BehaData.mat')
 
+sp = BehaData.SentDur_perwrd(TagCoh.SigSubID);
+[a,I] = sort(sp);
 
+fast = I(1:14);
+slow = I(16:29);
 
+[~,p,~,stats] = ttest(TagCoh.PreTarg_Ttest.data4test(fast,1), TagCoh.PreTarg_Ttest.data4test(fast,2)) %[0.25 -1.22]
+[~,p,~,stats] = ttest(TagCoh.PreTarg_Ttest.data4test(slow,1), TagCoh.PreTarg_Ttest.data4test(slow,2)) %[8.5e-04 -4.90]
 
-
-
-
-
-
+[coef,pval] = corr([tag_dif(fast) 1000./sp(fast)],'type','Spearman');
+[coef(1,2) pval(1,2)] %[-0.4901 0.0779]
+[coef,pval] = corr([tag_dif(slow) 1000./sp(slow)],'type','Spearman');
+[coef(1,2) pval(1,2)] %[0.6835    0.0089]
 
 
 

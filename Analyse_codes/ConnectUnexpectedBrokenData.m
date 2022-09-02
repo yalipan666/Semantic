@@ -35,6 +35,8 @@ for ff = n:-1:1
     Result_all.CORR(idx) = Result.CORR(idx);
     Result_all.KeyPress(idx) = Result.KeyPress(idx);
     Result_all.WordLocation(idx,:,:) = Result.WordLocation(idx,:,:);
+    Result_all.EYEdata(idx_1) = Result.EYEdata(idx_1);
+
     % get the trlid_end
     if ff ~= 1
         trlid_end(ff-1) = trlid_start-1;

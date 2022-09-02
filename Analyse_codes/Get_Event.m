@@ -54,10 +54,10 @@ for t = 1:length(sentid)
     sac2this_dur = [];
     for pp = 1:evtn
         r = find(saccade_eye(:,1) == fixon_eye(pp)-1);
-        if isempty(r)
-            sac2this_dur(pp,1) = nan;
-        else
+        if length(r)==1
             sac2this_dur(pp,1) = saccade_eye(r,2);
+        else
+            sac2this_dur(pp,1) = nan;
         end
     end
     fix_on_MEG = fixon_eye-repmat(eyeneedminus(t),evtn,1);

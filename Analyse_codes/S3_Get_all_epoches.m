@@ -15,12 +15,12 @@ else
     ft_defaults
     rootdir = 'Z:\Semantic\';
 end
+epoch_select = 'abs(PPara.event_all(:,3))<2'; %% select: n-1,n,n+1
 
 %%% basic settingup
 RunCond = 'WrdOn'; %%'WrdOn';%%% epoch aligned with RunCond
 PPara.filename = RunCond;
 AnaTW = 1000;
-epoch_select = 'abs(PPara.event_all(:,3))<2'; %% select: n-1,n,n+1
 DoBaseline = 0; % get epochs for baseline period
 ica = 0; % remove ica components
 %%% get file names
@@ -155,6 +155,7 @@ for ddd = TaskId
     save([rootdir 'Analyse_data' filesep 'ExpInfo.mat'],'ExpInfo');
     disp(['*** epoching done! ' DS '---' sub]);
     clear data
+    
 end
 
 

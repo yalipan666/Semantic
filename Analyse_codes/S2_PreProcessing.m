@@ -98,17 +98,24 @@ for ddd = TaskId
     
     %% get eyemovement metrics from eyelink
     %first converting data from .edf to .asc (C:/toolbox/SR Research/edfconverter/)
-    eyefile = [PPath.RawEye File.Eye '.asc'];
-    load([PPath.RawPTB File.PTB],'Result');
-    WordLocMat = 2.*Result.WordLocation;
-    EyeData = Get_EyeData(eyefile, WordLocMat,ExpInfo.Trigger,TrackedEye);
-    save([PPath.SaveData 'EyeData'],'EyeData');
+    if ~exist([PPath.SaveData 'Event.mat'],'file')
+        if ~exist([PPath.SaveData 'EyeData.mat'],'file')
+            eyefile = [PPath.RawEye File.Eye '.asc'];
+            load([PPath.RawPTB File.PTB],'Result');
+            WordLocMat = 2.*Result.WordLocation;
+            EyeData = Get_EyeData(eyefile, WordLocMat,ExpInfo.Trigger,TrackedEye);
+            save([PPath.SaveData 'EyeData'],'EyeData');
+        else
+            load([PPath.SaveData 'EyeData']);
+        end
+        %%% get event
+        load([PPath.RawPTB File.PTB],'Para'); % Para
+        Event = Get_Event(EyeData,Para.CondMat,Para.FlkWords,Trigger_MEG,ExpInfo.Trigger,ExpInfo.EventHdr);
+        save([PPath.SaveData 'Event'],'Event');
+    else
+        load([PPath.SaveData 'Event']);
+    end
     
-    %% get event
-    load([PPath.RawPTB File.PTB],'Para'); % Para
-    Event = Get_Event(EyeData,Para.CondMat,Para.FlkWords,Trigger_MEG,ExpInfo.Trigger,ExpInfo.EventHdr);
-    save([PPath.SaveData 'Event'],'Event','-v7.3');
-   
     %% remove artefacts with ICA on server
     %%% get the data purely during sentence reading
     PPara.fixon = Trigger_MEG(Trigger_MEG(:,1)==ExpInfo.Trigger.Fix ,2); %% fixation onset

@@ -1,8 +1,8 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Reading Experiment with Rapid Tagging frequency: 
+% Reading Experiment with Rapid Tagging frequency:
 % semantic violation + whole dynamics of attention shift in reading(wrd freq)
 % 20210623 Yai Pan
-% Press Q -quit: to exit exp 
+% Press Q -quit: to exit exp
 % Press C -continue: to skip eyechecker during start/end box
 % Press E -eye: to start eyelink setup, calibration or/and validation
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -10,8 +10,7 @@
 function Read_Semantic
 tic
 %%% tagging frequency
-f1 = 60;
-f2 = 60;
+tagfreq = 60;
 close all;
 Screen('CloseAll');
 
@@ -22,7 +21,7 @@ if cfg.debugmode
     Screen('Preference', 'SkipSyncTests', 1); %must be 0 during experiment
     cfg.el.eyelink = 0;              %eyelink on/off
     cfg.el.override = 1;          %No eyelink in actual experiment, use only in case of fault
-    cfg.DataPixxOnly = 1;      %for rapidmode testing without triggers with propixx
+    cfg.DataPixxOnly = 0;      %for rapidmode testing without triggers with propixx
     tt = 0.01;
 else
     Screen('Preference', 'SkipSyncTests', 0); %must be 0 during experiment
@@ -77,7 +76,6 @@ PsychDefaultSetup(2);    % call some default settings for setting up Psychtoolbo
 %Open screen
 screens = Screen('Screens'); % Get the screen numbers
 cfg.screenNumber = max(screens); %select screen
-cfg.ScrBgc = [0.5 0.5 0.5];
 %%%  Get the size of the on screen window and set resolution
 sc_info = Screen('Resolution', cfg.screenNumber);
 resx = sc_info.width;
@@ -93,7 +91,7 @@ escKey = KbName('Q');
 %%%%%%%%%%%%%%%%%%%%%%%%================EyeLink settings====================%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 eyeused = {'LEFT_EYE';'RIGHT_EYE'};
 eyeused_id = 1;
-cfg.el.Eyeused = eyeused{eyeused_id}; 
+cfg.el.Eyeused = eyeused{eyeused_id};
 cfg.el.edffile = [cfg.Date cfg.SubCode '.edf']; %EDF filename
 
 %%%%%%=====Eyelink Initialization
@@ -114,7 +112,6 @@ if cfg.el.eyelink
     end
     cfg.el_rect = [0 0 resx resy]; %% needed for the el_Set_Params function
     % Set parameters, start and calibrate eyelink
-    
 else %=% when eyelink is off
     if ~cfg.debugmode %is this is real experiment time, eyelink should be on
         if cfg.el.override
@@ -126,6 +123,7 @@ else %=% when eyelink is off
 end
 
 %%%%%%%%============= open PTB window
+cfg.ScrBgc = [0.5 0.5 0.5];
 [window] = PsychImaging('OpenWindow', cfg.screenNumber,cfg.ScrBgc);
 cfg.window = window;
 %%% for the rapid drawing in the offscreen window
@@ -140,7 +138,7 @@ if ~cfg.debugmode && ~cfg.CheckEyeMyself
 end
 
 % enable alpha blending, also required for using offscreen window
-Screen(window,'BlendFunction',GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+Screen('BlendFunction', window, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 % Flip to clear
 Screen('Flip', window);
 
@@ -156,8 +154,9 @@ cfg.WordStart = 4*cfg.WordSpace; %% unit in visual angle, the start point of sen
 WordStart = usrDeg2Pix(cfg.WordStart,cfg);
 cfg.TextStyle = 1;                  %0=normal,1=bold,2=italic,4=underline,8=outline,32=condense,64=extend.
 cfg.TextFont = 'Courier New';
-cfg.TextSize = 20;  %20--0.316; %22-0.3556; 24--0.3951 
-cfg.TextColor = [0 0 0];
+cfg.TextSize = 20;  %20--0.316; %22-0.3556; 24--0.3951
+cfg.TextColor = BlackIndex(window);
+white = WhiteIndex(window);
 
 %%%Timing
 cfg.fix_t = tt*1.2;                 %Duration (s) of the fixation
@@ -235,16 +234,15 @@ DotCoords_start = zeros(4,4);
 DotCoords_end = zeros(4,4);
 for q = 1:4
     DotCoords_start(q,:) = floor(CenterRectOnPointd(coords_dot, q_rects(q,1)+dot_center_ptb, qcenters(q,2)));
-%     DotCoords_end(q,:) = floor(CenterRectOnPointd(coords_dot, q_rects(q,3)-dot_center_ptb, qcenters(q,2)-14)); % right horizontal end box
     DotCoords_end(q,:) = floor(CenterRectOnPointd(coords_dot,qcenters(q,1), q_rects(q,4)-2*dot_center_ptb)); % bottom vertical end box
 end
 %%% box coords for eyelink monitor window, in big normal window not small rapidmode window
 box_r_el = round(((tand(cfg.box_r_el)*cfg.dist)*(resy/cfg.height))); %% convert degree to pix
 box_center_ptb = round(((tand(cfg.box_r_el+cfg.WordSpace)*cfg.dist)*(resy/cfg.height)));
 cfg.el.startWindow = [0 0 2*box_r_el 2*box_r_el];
-cfg.el.startWindow = floor(CenterRectOnPointd(cfg.el.startWindow,box_center_ptb,resy/2-2*14)); %% starting box small window
+cfg.el.startWindow = floor(CenterRectOnPointd(cfg.el.startWindow,box_center_ptb,resy/2)); %% starting box small window
 cfg.el.endWindow = floor(CenterRectOnPointd(cfg.el.startWindow,resx/2,resy-2*box_center_ptb)); %% starting box small window
-endbox_color = [0.25 0.25 0.25];
+endbox_color = white./4;
 
 %%%%%%%%%%%%%%================Initalise Labjack / buttonbox settings===============%%%%%%%%%%%%%%%%%%%%%
 if ~cfg.debugmode
@@ -257,9 +255,9 @@ if ~cfg.debugmode
     KbQueueCreate(0,keylist);%%Create queue, this is a time consuming operation (relatively), do while non-time critical
     KbQueueStart(); %Start listening
 else
-  %%% KEY response in debugmode
-  leftKey = KbName('J'); %% true
-  rightKey = KbName('K'); %% false
+    %%% KEY response in debugmode
+    leftKey = KbName('J'); %% true
+    rightKey = KbName('K'); %% false
 end
 
 %%%%%%%%%%%%%%%%%==================Parallel Port IO & triggers settings===============%%%%%%%%%%%%%%%%%%%%%
@@ -282,19 +280,14 @@ if ~cfg.debugmode
 end
 
 %%%%%%%%%%%%%%%%%=================Frequency Tagging Timecourse======================%%%%%%%%%%%%%%%%%%%%%
-% if mod(str2double(answer{2}),2) % frequency counterbalance over subjects
-cfg.FreqMat = [f1 f2];
-% else
-%     cfg.FreqMat = circshift([f1 f2],[0 1]);
-% end
+cfg.FreqMat = tagfreq;
 Para.FreqMat = cfg.FreqMat;
 cfg.WaveShape = 'sin';            %Shape of the waveform 'sin' for sinusoidal, 'square' for square wave
 cfg.Phaselock = 1;                %1=Phase locked RFT, same phase RFT stimulation for every trial; 0=random phase
 cfg.FreqBins = 8;                %Nr of frequency bins with non-phase locked RFT
 
 %%%%%%%%=====photoDiode settings
-cfg.diodeFreq = 1;               %Frequency to present to photodiode? 1=f1, 2=f2, depending on conf
-cfg.photoDiode = 1;              %Add corner stimulus for photodiode? --- the right bottom one
+cfg.photoDiode = 1;              %Add corner stimulus for photodiode
 cfg.diodeSize = 2;               %Size of the photodiode in cm
 
 %Get the placement of the photoDiode
@@ -302,16 +295,16 @@ if cfg.photoDiode
     %calculate size of photodiode in pixels
     diode_size_pix=round(0.5*(resy/cfg.height)*cfg.diodeSize);
     %calculate diode positions -- right bottom one
-    diode1_pos{1}=[resx/2-diode_size_pix resy/2-diode_size_pix resx/2 resy/2];
-    diode1_pos{2}=[resx-diode_size_pix resy/2-diode_size_pix resx resy/2];
-    diode1_pos{3}=[resx/2-diode_size_pix resy-diode_size_pix resx/2 resy];
-    diode1_pos{4}=[resx-diode_size_pix resy-diode_size_pix resx resy];
+    diode1_pos(1,:)=[resx/2-diode_size_pix resy/2-diode_size_pix resx/2 resy/2];
+    diode1_pos(2,:)=[resx-diode_size_pix resy/2-diode_size_pix resx resy/2];
+    diode1_pos(3,:)=[resx/2-diode_size_pix resy-diode_size_pix resx/2 resy];
+    diode1_pos(4,:)=[resx-diode_size_pix resy-diode_size_pix resx resy];
     
     %calculate diode positions -- left bottom one
-    diode2_pos{1}=[0 resy/2-diode_size_pix diode_size_pix resy/2];
-    diode2_pos{2}=[resx/2 resy/2-diode_size_pix resx/2+diode_size_pix resy/2];
-    diode2_pos{3}=[0 resy-diode_size_pix diode_size_pix resy];
-    diode2_pos{4}=[resx/2 resy-diode_size_pix resx/2+diode_size_pix resy];
+    diode2_pos(1,:)=[0 resy/2-diode_size_pix diode_size_pix resy/2];
+    diode2_pos(2,:)=[resx/2 resy/2-diode_size_pix resx/2+diode_size_pix resy/2];
+    diode2_pos(3,:)=[0 resy-diode_size_pix diode_size_pix resy];
+    diode2_pos(4,:)=[resx/2 resy-diode_size_pix resx/2+diode_size_pix resy];
 end
 
 % create photoDiode
@@ -381,8 +374,7 @@ for f = 1:length(cfg.FreqMat)
     end
 end
 cfg.freqTable = freqTable;
-cfg.diodeTable1 = freqTable(dsearchn(cfg.FreqMat',f1),:);
-cfg.diodeTable2 = freqTable(dsearchn(cfg.FreqMat',f2),:);
+cfg.diodeTable = freqTable(dsearchn(cfg.FreqMat',tagfreq),:);
 
 
 %calculate all permutation of phase differences. It is important to balance
@@ -392,7 +384,7 @@ combs=[];
 intervals=[1:cfg.FreqBins]-1;
 for i=1:cfg.FreqBins
     tmp(:,1)=[1:cfg.FreqBins]';
-    tmp(:,2)=mod(intervals+(i-1),cfg.FreqBins)+1; 
+    tmp(:,2)=mod(intervals+(i-1),cfg.FreqBins)+1;
     combs=[combs ; tmp];
 end
 cfg.combs=combs;
@@ -450,7 +442,7 @@ if cfg.el.eyelink
 end
 
 if cfg.el.eyelink
-%%Experiment start message to eyelink
+    %%Experiment start message to eyelink
     Eyelink('Message', 'Exp start');
 end
 
@@ -461,7 +453,7 @@ cfg.triggerSent=0;
 for i = 1:nTrials
     
     %%%  releasing both key press and button press
-    KbReleaseWait;  
+    KbReleaseWait;
     if ~cfg.debugmode
         KbQueueFlush();
     end
@@ -478,42 +470,38 @@ for i = 1:nTrials
     
     %%%set frequency table
     if cfg.Phaselock
-        cur_freqTable=freqTable;
+        lum=freqTable;
     else %randomize phase
         comb_sel=cfg.combsMat(i,:);
         bin1=comb_sel(1);
         bin2=comb_sel(2);
-        cur_freqTable(1,:)=squeeze(freqTable(1,bin1,:))';
-        cur_freqTable(2,:)=squeeze(freqTable(2,bin2,:))';
-        switch cfg.diodeFreq
-            case 1
-                cfg.diodeTable=cur_freqTable(dsearchn(cfg.FreqMat',f1),:);
-            case 2
-                cfg.diodeTable=cur_freqTable(dsearchn(cfg.FreqMat',f2),:);
-        end
+        lum(1,:)=squeeze(freqTable(1,bin1,:))';
+        lum(2,:)=squeeze(freqTable(2,bin2,:))';
+        cfg.diodeTable=lum(dsearchn(cfg.FreqMat',tagfreq),:);
     end
-    
     
     %%%%%%======= do drift correction
     if  cfg.el.eyelink && i ~= 1
-      if mod(i,3)==1 || mod(i,Para.BreakTrials)==1
-        el_calib_valid(cfg,2); % run EyelinkDoDriftCorrection
-      end
+        if mod(i,3)==1 || mod(i,Para.BreakTrials)==1
+            el_calib_valid(cfg,2); % run EyelinkDoDriftCorrection
+        end
     end
     Screen('Flip', window);
-    WaitSecs(0.3)
+    WaitSecs(0.1)
     
     %%%%%%%%%%%%%%%%%%%% ============ 1. fixation ============ %%%%%%%%%%%%%%%%%%%%
     for j = 1:fixendframes
-        for q = 1:4 %four quadrants draw fixation cross
-            %%% draw photodiode
-            colortmp_p1 = [cfg.diodeTable1((((j-1)*12)+q)), cfg.diodeTable1((((j-1)*12)+q+4)),  cfg.diodeTable1((((j-1)*12)+q+8))];
-            colortmp_p2 = [cfg.diodeTable2((((j-1)*12)+q)), cfg.diodeTable2((((j-1)*12)+q+4)),  cfg.diodeTable2((((j-1)*12)+q+8))];
-            if cfg.photoDiode
-                Screen('DrawTexture', window, diode_tex,[],diode1_pos{q},0, [], 1, colortmp_p1);
-                Screen('DrawTexture', window, diode_tex,[],diode2_pos{q},0, [], 1, colortmp_p2);
-            end            
+        % draw cross-fixation in all 4 quadrants
+        for q = 1 :4
             Screen('DrawLines', window, CrossCoords, lineWidthPix, cfg.TextColor, qcenters(q,:), 2);
+        end
+        % draw photodiode in all 4 quadrants
+        if cfg.photoDiode
+            texts_pd = [ones(1,4).*diode_tex ones(1,4).*diode_tex];
+            dests_pd = [diode1_pos' diode2_pos'];
+            col_tag = [lum(1,(j-1)*12+[1:4]); lum(1,(j-1)*12+[5:8]); lum(1,(j-1)*12+[9:12])];
+            colors = [col_tag col_tag];
+            Screen('DrawTextures',window,texts_pd,[],dests_pd,0,[],1,colors);
         end
         % Flip to the screen
         vbl = Screen('Flip', window);
@@ -535,15 +523,13 @@ for i = 1:nTrials
     fff = 1;
     while fff <= round(cfg.gaze_start/ifi)
         %%% draw start box
-        for q = 1:4 %four quadrants draw fixation cross
-            Screen('FillRect', window, cfg.TextColor, DotCoords_start(q,:));
-            %%% draw photodiode
-            colortmp_p1 = [cfg.diodeTable1((((j-1)*12)+q)), cfg.diodeTable1((((j-1)*12)+q+4)),  cfg.diodeTable1((((j-1)*12)+q+8))];
-            colortmp_p2 = [cfg.diodeTable2((((j-1)*12)+q)), cfg.diodeTable2((((j-1)*12)+q+4)),  cfg.diodeTable2((((j-1)*12)+q+8))];
-            if cfg.photoDiode
-                Screen('DrawTexture', window, diode_tex,[],diode1_pos{q},0, [], 1, colortmp_p1);
-                Screen('DrawTexture', window, diode_tex,[],diode2_pos{q},0, [], 1, colortmp_p2);
-            end 
+        Screen('FillRect', window, cfg.TextColor, DotCoords_start');
+        
+        %%% draw photodiode in all 4 quadrants
+        if cfg.photoDiode
+            col_tag = [lum(1,(j-1)*12+[1:4]); lum(1,(j-1)*12+[5:8]); lum(1,(j-1)*12+[9:12])];
+            colors = [col_tag col_tag];
+            Screen('DrawTextures',window,texts_pd,[],dests_pd,0,[],1,colors);
         end
         % Flip to the screen
         vbl = Screen('Flip', window);
@@ -581,7 +567,7 @@ for i = 1:nTrials
                     fff = 0;
                 end
             else
-              fff = 0;
+                fff = 0;
             end
         else
             fff = 0;
@@ -639,15 +625,15 @@ for i = 1:nTrials
     
     %%%%% draw sentence in the offscreen window
     %%all words in offscreen 1
-    woff1 = Screen('OpenOffscreenwindow', window, [cfg.ScrBgc 0],TextureBox1);
-    Screen('TextFont', woff1, cfg.TextFont);
-    Screen('TextSize', woff1, cfg.TextSize);
-    Screen('TextStyle',woff1, cfg.TextStyle);
+    woff = Screen('OpenOffscreenwindow', window, [cfg.ScrBgc 0],TextureBox1);
+    Screen('TextFont', woff, cfg.TextFont);
+    Screen('TextSize', woff, cfg.TextSize);
+    Screen('TextStyle',woff, cfg.TextStyle);
     for www = 1:NumWord
-        Screen('DrawText', woff1, Words{www},TxtXcoord(www),0.5*TextureBox1(4)+0.25*MostHeight,[1 1 1], [], 1);
+        Screen('DrawText', woff, Words{www},TxtXcoord(www),0.5*TextureBox1(4)+0.25*MostHeight,[1 1 1], [], 1);
     end
     
-    %%% flickering target for fixations of non-target
+    %%% flickering target
     bcgheight = round(TxtXcoord(FlkWords(i,1)+1)-TxtXcoord(FlkWords(i,1)));
     id_wrd = FlkWords(i,1);
     [woff_tar, mask_tar,rect4offscreen_tar] = DrawFlicker(TxtXcoord, id_wrd, bcgheight,cfg,TextureBox1,WordSpace);
@@ -670,7 +656,7 @@ for i = 1:nTrials
         if cfg.el.eyelink
             sample = Eyelink('NewestFloatSample');
             % Get current gaze position from sample
-            x = sample.gx(eyeused_id);  
+            x = sample.gx(eyeused_id);
             y = sample.gy(eyeused_id);
             %%% xxxx plot eyelink window
             if cfg.CheckEyeMyself
@@ -680,28 +666,19 @@ for i = 1:nTrials
                 % xy position of eye
                 Screen('FrameOval', window, [255 0 0], [x/2-8 y/2-8 x/2+8 y/2+8],3);
             end
-         end
-         
-        %%% put sentences onscreen
-        for q = 1:4 %for all quadrants
-            %%% colormat
-            tag_color = [cur_freqTable(1,(((j-1)*12)+q)), cur_freqTable(1,(((j-1)*12)+q+4)),  cur_freqTable(1,(((j-1)*12)+q+8))];
-            %%% flicking target during pretarget fixation
-            Screen('DrawTexture', window, woff_tar,[], q_rects(q,:),0, [], 1, tag_color);
-            Screen('DrawTexture', window, mask_tar,[], rect4offscreen_tar+[q_rects(q,1) q_rects(q,2) q_rects(q,1) q_rects(q,2)]);
-            %%% draw all words
-            colortmp1 = cfg.TextColor;
-            Screen('DrawTexture', window, woff1,[], q_rects(q,:),0, [], 1, colortmp1);
-            %%% draw end box
-            Screen('FillRect', window, endbox_color, DotCoords_end(q,:));
-            %%% draw photodiode
-            colortmp_p1 = [cfg.diodeTable1((((j-1)*12)+q)), cfg.diodeTable1((((j-1)*12)+q+4)),  cfg.diodeTable1((((j-1)*12)+q+8))];
-            colortmp_p2 = [cfg.diodeTable2((((j-1)*12)+q)), cfg.diodeTable2((((j-1)*12)+q+4)),  cfg.diodeTable2((((j-1)*12)+q+8))];
-            if cfg.photoDiode
-                Screen('DrawTexture', window, diode_tex,[],diode1_pos{q},0, [], 1, colortmp_p1);
-                Screen('DrawTexture', window, diode_tex,[],diode2_pos{q},0, [], 1, colortmp_p2);
-            end
         end
+        
+        %%% put sentences onscreen in all four quadrants
+        texts = [ones(1,4).*woff_tar ones(1,4).*mask_tar ones(1,4).*woff texts_pd];%[tag,mask,sentences,photodiode]
+        dest_msk = [q_rects(1,[1 2]) q_rects(1,[1 2]);q_rects(2,[1 2]) q_rects(2,[1 2]);q_rects(3,[1 2]) q_rects(3,[1 2]);q_rects(4,[1 2]) q_rects(4,[1 2])];
+        dest_msk = dest_msk + rect4offscreen_tar;
+        dests = [q_rects' dest_msk' q_rects' dests_pd];
+        col_tag = [lum(1,(j-1)*12+[1:4]); lum(1,(j-1)*12+[5:8]); lum(1,(j-1)*12+[9:12])];% 3row(RGB)*4column(quadrant)
+        col_wrd = repmat(cfg.TextColor,3,4);
+        col_msk = ones(3,4).*white;
+        colors = [col_tag col_msk col_wrd col_tag col_tag];
+        Screen('DrawTextures', window, texts,[], dests,0, [], 1, colors);
+        Screen('FillRect', window, endbox_color, DotCoords_end');
         %%% flip the frame
         [vbl] = Screen('Flip', window, vbl + 0.5 * ifi);
         
@@ -728,7 +705,7 @@ for i = 1:nTrials
             EYEdata = [EYEdata; [x y]];
             %%% xxxx plot eyelink window
             if cfg.CheckEyeMyself
-                 % eyelink check window
+                % eyelink check window
                 Screen('FrameRect', window, cfg.TextColor, cfg.el.startWindow./2);
                 Screen('FrameRect', window, cfg.TextColor, cfg.el.endWindow./2);
                 % xy position of eye
@@ -742,7 +719,7 @@ for i = 1:nTrials
                     fff = 0;
                 end
             else
-              fff = 0;
+                fff = 0;
             end
         else
             fff = 0;
@@ -773,12 +750,12 @@ for i = 1:nTrials
     end
     
     %%% close offscreens
-    Screen('Close', woff1) 
+    Screen('Close', woff)
     Screen('Close', woff_tar)
     Screen('Close', mask_tar)
     
     %%%%%%%%%%%%%%%%%%%% ============ 4. probe questions  ============ %%%%%%%%%%%%%%%%%%%%
-    KbReleaseWait; 
+    KbReleaseWait;
     if ~cfg.debugmode
         KbQueueFlush();
     end
@@ -789,11 +766,11 @@ for i = 1:nTrials
         Screen('TextStyle',window, cfg.TextStyle);
         message = [probe '\n\n\n\n\n\n True: Right index; \n\n False: Right middle'];
         for q = 1 :4
-            [~,~,~] = DrawFormattedText(window,message,q_rects(q,1)+ WordStart, 'center' ,cfg.TextColor,[],[],[],[],[],q_rects(q,:));
+            [~,~,~] = DrawFormattedText(window,message,[q_rects(:,1)+ WordStart]', 'center' ,cfg.TextColor,[],[],[],[],[],q_rects(q,:));
         end
         [vbl] = Screen('Flip', window);
         Result.ProbeON(i,1) = vbl;
-      
+        
         %%% check the response
         noResponse=1;
         while noResponse
@@ -807,7 +784,7 @@ for i = 1:nTrials
                     KeyCode = KeyCode(ind); %select first response
                 end
                 t_keypress=firstpress(KeyCode);
-            else   %% keyboard 
+            else   %% keyboard
                 [pressed, t_keypress, KeyCode] = KbCheck;
             end
             if pressed
@@ -817,7 +794,7 @@ for i = 1:nTrials
                     else
                         Result.CORR(i) = 0;
                     end
-                else  %% keyboard 
+                else  %% keyboard
                     if (strcmp(Question{i,2},'T') && KeyCode(leftKey)) || (strcmp(Question{i,2},'F') && KeyCode(rightKey))
                         Result.CORR(i) = 1;
                     else
@@ -862,37 +839,37 @@ for i = 1:nTrials
     if ~mod(i,Para.BreakTrials) && i ~= nTrials
         %%% have a rest
         for kkkk = 1:cfg.rest
-          message=['You have done ' num2str(i/Para.BreakTrials) ' out of ' num2str(n_block) ' blocks!'...
-              '\n\n Please close your eyes and take a break \n\n\n\n ' num2str(cfg.rest-kkkk)];
-          for q = 1:4
-            [~,~,~]=DrawFormattedText(window, message, 'center', 'center',cfg.TextColor,[],[],[],2,[],q_rects(q,:));
-          end
-          Screen('Flip', window);
-          WaitSecs(1);
+            message=['You have done ' num2str(i/Para.BreakTrials) ' out of ' num2str(n_block) ' blocks!'...
+                '\n\n Please close your eyes and take a break \n\n\n\n ' num2str(cfg.rest-kkkk)];
+            for q = 1:4
+                [~,~,~]=DrawFormattedText(window, message, 'center', 'center',cfg.TextColor,[],[],[],2,[],q_rects(q,:));
+            end
+            Screen('Flip', window);
+            WaitSecs(1);
         end
         
         %%% press any button to continue
         message='Please press any button when you are ready to continue';
         for q = 1:4
-          [~,~,~]=DrawFormattedText(window, message, 'center', 'center',cfg.TextColor,[],[],[],2,[],q_rects(q,:));
+            [~,~,~]=DrawFormattedText(window, message, 'center', 'center',cfg.TextColor,[],[],[],2,[],q_rects(q,:));
         end
         Screen('Flip', window);
         %%% check button press
         if ~cfg.debugmode
-          KbQueueFlush();
+            KbQueueFlush();
         end
         KbReleaseWait;
         noResponse = 1;
         while noResponse
-          if ~cfg.debugmode
-            [pressed] = KbQueueCheck(); %check response, return whether pressed, and first press timestamp
-            KbQueueFlush(); %only the KbQueues events are deleted.
-          else
-            [pressed] = KbCheck;
-          end
-          if pressed
-            noResponse = 0;
-          end
+            if ~cfg.debugmode
+                [pressed] = KbQueueCheck(); %check response, return whether pressed, and first press timestamp
+                KbQueueFlush(); %only the KbQueues events are deleted.
+            else
+                [pressed] = KbCheck;
+            end
+            if pressed
+                noResponse = 0;
+            end
         end
         %add empty screen
         Screen('Flip', window);
@@ -905,11 +882,11 @@ end
 %%% end of study
 message = 'The End! \n\n Well done! \n\n  THANK YOU !!';
 for q = 1 : 4
-  [~,~,~]=DrawFormattedText(window, message, 'center', 'center',cfg.TextColor,[],[],[],2,[],q_rects(q,:));
+    [~,~,~]=DrawFormattedText(window, message, 'center', 'center',cfg.TextColor,[],[],[],2,[],q_rects(q,:));
 end
 Screen('Flip', window);
 WaitSecs(2);
-    
+
 %stop eyelink & transfer file
 if cfg.el.eyelink
     Eyelink('Message', 'end of block');
@@ -983,18 +960,18 @@ function cfg = el_calib_valid(cfg,mode)
 Datapixx('SetPropixxDlpSequenceProgram', 0);
 Datapixx('RegWrRd');
 if mode == 0 %% run the eye-tracker setup for the first time
-  %%% run el_Start
-  cfg = el_Start_SameWindow(cfg);
-  %%% get CheckEyeMyself
-  cfg.el.defaults.CheckEyeMyself = cfg.CheckEyeMyself;
-  cfg.el.defaults.ScrBgc = cfg.ScrBgc;
-  cfg.el.defaults.TextColor = cfg.TextColor;
+    %%% run el_Start
+    cfg = el_Start_SameWindow(cfg);
+    %%% get CheckEyeMyself
+    cfg.el.defaults.CheckEyeMyself = cfg.CheckEyeMyself;
+    cfg.el.defaults.ScrBgc = cfg.ScrBgc;
+    cfg.el.defaults.TextColor = cfg.TextColor;
 elseif mode == 1 %% run the eye-tracker setup for the non-first time
-  %%% re-calibration and re-validation and re-drift correction
-  EyelinkDoTrackerSetup(cfg.el.defaults);
-elseif mode == 2 
-   EyelinkDoDriftCorrection(cfg.el.defaults);
-   Eyelink('StartRecording');
+    %%% re-calibration and re-validation and re-drift correction
+    EyelinkDoTrackerSetup(cfg.el.defaults);
+elseif mode == 2
+    EyelinkDoDriftCorrection(cfg.el.defaults);
+    Eyelink('StartRecording');
     % record a few samples before we actually start displaying
     WaitSecs(0.1);
     % mark zero-plot time in data file

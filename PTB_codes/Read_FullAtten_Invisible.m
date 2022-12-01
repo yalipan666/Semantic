@@ -237,14 +237,13 @@ DotCoords_start = zeros(4,4);
 DotCoords_end = zeros(4,4);
 for q = 1:4
   DotCoords_start(q,:) = floor(CenterRectOnPointd(coords_dot, q_rects(q,1)+dot_center_ptb, qcenters(q,2)));
-  %     DotCoords_end(q,:) = floor(CenterRectOnPointd(coords_dot, q_rects(q,3)-dot_center_ptb, qcenters(q,2)-14)); % right horizontal end box
   DotCoords_end(q,:) = floor(CenterRectOnPointd(coords_dot,qcenters(q,1), q_rects(q,4)-2*dot_center_ptb)); % bottom vertical end box
 end
 %%% box coords for eyelink monitor window, in big normal window not small rapidmode window
 box_r_el = round(((tand(cfg.box_r_el)*cfg.dist)*(resy/cfg.height))); %% convert degree to pix
 box_center_ptb = round(((tand(cfg.box_r_el+cfg.WordSpace)*cfg.dist)*(resy/cfg.height)));
 cfg.el.startWindow = [0 0 2*box_r_el 2*box_r_el];
-cfg.el.startWindow = floor(CenterRectOnPointd(cfg.el.startWindow,box_center_ptb,resy/2-2*14)); %% starting box small window
+cfg.el.startWindow = floor(CenterRectOnPointd(cfg.el.startWindow,box_center_ptb,resy/2)); %% starting box small window
 cfg.el.endWindow = floor(CenterRectOnPointd(cfg.el.startWindow,resx/2,resy-2*box_center_ptb)); %% starting box small window
 endbox_color = [0.25 0.25 0.25];
 

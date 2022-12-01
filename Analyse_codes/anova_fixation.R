@@ -200,7 +200,7 @@ ggsave('Z:/Semantic/Results/sv/Behav/TotalGaze.svg', width=5, height=3.6)
 
 
 
-############# effect size for coherence t-test
+############# effect size for coherence t-test ###############################
 ## set path
 setwd("Z:/Semantic/Results/sv/Coh/") 
 

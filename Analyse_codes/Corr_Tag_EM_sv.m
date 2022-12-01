@@ -8,6 +8,12 @@
 % no correlations about N400 are included here
 % only use fixations from congruent condition to measure the reading speed
 
+% 20220907
+% measure for reading speed based on the duration of the whole sentence,
+% but not the fixation duration of each word (now we also include the
+% saccadic durations between words)
+% note: since the eyemovement data don't follow the Gaussian distribution,
+% it's better to use Spearman correlation rather than Pearson correlation.
 
 %% paths
 Path.Tag = 'Z:\Semantic\Results\sv\Coh\';
@@ -21,11 +27,11 @@ load([Path.Tag 'TagCoh']);
 Corr.TagSigSub = TagCoh.SigSubID;
 Corr.TagPre = TagCoh.PreTarg_Ttest.data4test;
 
-
 %% ======= get the eye movements metrics for each participant ======= %%
 load([Path.EM 'BehaData']);    
 % reading time for the whole sentence
 DurationPerwrd_normal = nan(length(TagCoh.subs),1); %averaged fixation duration of all words
+Speed_normal = nan(length(TagCoh.subs),1); % number of words in total divided by the reading time of all sentences (excluding the resting time)
 Duration_wrdBefoPre_Incong = nan(length(TagCoh.subs),1); % averaged fixation duration of the beginning words that before pre-target
 Duration_wrdFromPre_Incong = nan(length(TagCoh.subs),1); % averaged fixation duration of the beginning words that from pre-target
 for s = 1:length(TagCoh.subs)
@@ -49,6 +55,13 @@ for s = 1:length(TagCoh.subs)
     tmp = tmp_allfixdu./wrdnum;
     DurationPerwrd_normal(s,1) = mean(tmp(norm_id));
     
+    %% reading speed of the normal sentences
+    load(['Z:\Semantic\Analyse_data\sv_' TagCoh.subs{s} '\Trigger_MEG.mat']); %Trigger_MEG
+    sent_on = Trigger_MEG(Trigger_MEG(:,1)==4,2); %TriggerSentOn = 4;
+    sent_off = Trigger_MEG(Trigger_MEG(:,1)==8,2); %TriggerSentOff = 8;
+    sent_dur = (sent_off-sent_on)./1000; %unit in s
+    Speed_normal(s,1) = mean(wrdnum(norm_id)./sent_dur(norm_id));
+    
     %% incongruent sentences: averaged fixation duration of the beginning words that before pre-target
     % id for incongruent sentences in sv task
     in_id = Para.CondMat == 11; 
@@ -64,10 +77,12 @@ end
 BehaData.DurationPerwrd_normal = DurationPerwrd_normal;
 BehaData.Duration_wrdBefoPre_Incong = Duration_wrdBefoPre_Incong;
 BehaData.Duration_wrdFromPre_Incong = Duration_wrdFromPre_Incong;
+BehaData.Speed_normal = Speed_normal;
 save([Path.EM 'BehaData'],'BehaData');
 Corr.DurationPerwrd_normal = DurationPerwrd_normal;
 Corr.Duration_wrdBefoPre_Incong = Duration_wrdBefoPre_Incong;
 Corr.Duration_wrdFromPre_Incong = Duration_wrdFromPre_Incong;
+Corr.Speed_normal = Speed_normal;
 
   
 %% =======  Corr of Tagging and EM ======= %%
@@ -75,15 +90,19 @@ Corr.Duration_wrdFromPre_Incong = Duration_wrdFromPre_Incong;
 tag_dif = Corr.TagPre(:,1)-Corr.TagPre(:,2);
 
 %% Tag_pretarg_diff & reading speed
-rs = 1000./Corr.DurationPerwrd_normal;
-[coef,pval] = corr([tag_dif rs(Corr.TagSigSub)],'type','Pearson');
+% % % % % % rs = 1000./Corr.DurationPerwrd_normal;
+% % % % % % [coef,pval] = corr([tag_dif rs(Corr.TagSigSub)],'type','Pearson');
+% % % % % % Corr.TagPre_ReadSped_CoefP = [coef(1,2),pval(1,2)]; % p = 0.0224
+% % % % % % [coef,pval] = corr([tag_dif Corr.DurationPerwrd_normal(Corr.TagSigSub)],'type','Pearson');
+% % % % % % Corr.TagPre_DurationPerwrd_CoefP = [coef(1,2),pval(1,2)]; % p = 0.0021
+rs = Corr.Speed_normal;
+[coef,pval] = corr([tag_dif rs(Corr.TagSigSub)],'type','Spearman');
 Corr.TagPre_ReadSped_CoefP = [coef(1,2),pval(1,2)]; % p = 0.0224
-[coef,pval] = corr([tag_dif Corr.DurationPerwrd_normal(Corr.TagSigSub)],'type','Pearson');
-Corr.TagPre_DurationPerwrd_CoefP = [coef(1,2),pval(1,2)]; % p = 0.0021
+
 
 %% Tag_pretarg_diff & FirstFix_targ_diff
 Corr.FirstFix_Targ = BehaData.FirstFix.Tag;
-ff = BehaData.FirstFix_Targ;
+ff = BehaData.FirstFix.Tag;
 % ff = BehaData.Gaze.Tag;
 % ff = BehaData.TotalGaze.Tag;
 ff_dif = ff(:,1)-ff(:,2);
@@ -105,10 +124,10 @@ Corr.TagPre_GZavgTarg_CoefP = [coef(1,2),pval(1,2)]; %[-0.3552 0.0587]
 Corr.TagPre_TotalGZavgTarg_CoefP = [coef(1,2),pval(1,2)]; %[ -0.3592    0.0557]
 
 %% does parafoveal semantic integration predict the interruptness of reading
-interpt = Duration_wrdBefoPre_Incong - Duration_wrdFromPre_Incong;
+interpt = Corr.Duration_wrdBefoPre_Incong - Corr.Duration_wrdFromPre_Incong;
 [coef,pval] = corr([tag_dif interpt(Corr.TagSigSub)],'type','Pearson');
 Corr.TagPre_InterptDurWrd_CoefP = [coef(1,2),pval(1,2)]; %[0.2325 0.2249]
-interpt = 1000./Duration_wrdBefoPre_Incong - 1000./Duration_wrdFromPre_Incong;
+interpt = 1000./Corr.Duration_wrdBefoPre_Incong - 1000./Corr.Duration_wrdFromPre_Incong;
 [coef,pval] = corr([tag_dif interpt(Corr.TagSigSub)],'type','Pearson');
 Corr.TagPre_InterptSpeed_CoefP = [coef(1,2),pval(1,2)]; %[-0.0459  0.8131]
 
@@ -121,8 +140,6 @@ Corr.TagPre_InterptSpeed_CoefP = [coef(1,2),pval(1,2)]; %[-0.0459  0.8131]
 reg_diff = BehaData.RegsProb.Tag(:,1) - BehaData.RegsProb.Tag(:,2);
 [coef,pval] = corr([tag_dif reg_diff(Corr.TagSigSub)],'type','Pearson');
 [coef(1,2),pval(1,2)] %[0.0408    0.8336]
-
-
 
 
 %% corr of slow and fast readers
@@ -235,5 +252,37 @@ saveas(h,['Z:\Semantic\Results\sv\Coh\' figtitle],'svg');
 save([Path.EM 'BehaData'],'BehaData');
 save([Path.Result 'Corr'],'Corr');
 save([Path.Tag 'TagCoh'],'TagCoh');
+
+
+
+%%   =======  calculate correlation using a longer time wondow for coh
+% still the same correlation results as using the minimum time window to
+% average coherence
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 

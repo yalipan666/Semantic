@@ -37,6 +37,7 @@ randid = randperm(size(Sent_before_targ,1));
 pred_sents = Sent_before_targ(randid);
 pred_targers = Target(randid);
 
+save randid randid
 
 %% plausibility test
 % get all the congruent sentences

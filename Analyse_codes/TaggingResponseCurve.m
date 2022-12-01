@@ -8,7 +8,7 @@
 % note: analysis timewindow are first-pass durations
 
 function TaggingResponseCurve(sid)
-%%% do want to do visual rejection for all epochs, so set a global var to
+%%% doNOT want to do visual rejection for all epochs, so set a global var to
 %%% be used in Get_Epoch
 global rejectvisual
 %%%% running setting
@@ -38,8 +38,8 @@ badsensors = ExpInfo.BadSensor(TagCoh.SigSubID);
 clear TagCoh ExpInfo
 
 %%% set the outputs
-TagCurve.hdr = {'baseline','n-4','n-3','n-2','n-1','n','n+1','n+2','n+3'};
-Loc2Target = [nan -4 -3 -2 -1 0 1 2 3];
+TagCurve.hdr = {'baseline','n-4','n-3','n-2','n-1','n','n+1','n+2','n+3','n+4'};
+Loc2Target = [nan -4 -3 -2 -1 0 1 2 3 4];
 n = length(TagCurve.hdr);
 TagCurve.coh = zeros(1,n);
 TagCurve.trlnum = zeros(1,n);
@@ -151,7 +151,7 @@ save([rootdir 'Results' filesep 'sv' filesep 'Coh' filesep 'TagCurve_' num2str(s
 
 %% %%%%%%%%%%%%%%%% combine and plot the curve locally %%%%%%%%%%%%%%%%%%
 cd Z:\Semantic\Results\sv\Coh
-TagCurve_all.hdr = {'baseline','n-4','n-3','n-2','n-1','n','n+1','n+2','n+3'};
+TagCurve_all.hdr = {'baseline','n-4','n-3','n-2','n-1','n','n+1','n+2','n+3','n+4'};
 n = length(TagCurve_all.hdr);
 nsub = 29;
 TagCurve_all.coh = zeros(nsub,n);

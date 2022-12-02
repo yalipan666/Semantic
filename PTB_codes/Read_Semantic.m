@@ -279,9 +279,18 @@ if ~cfg.debugmode
     cfg.ioObjTrig = ioObjTrig;
 end
 
+%%%%%%%%%%%%%%%%%=================Propixx initialization======================%%%%%%%%%%%%%%%%%%%%%
+cfg.ProPixxModel = 5;%different models of Propixx, 2 for tagging at 480Hz, 5 for tagging at 1440 Hz, 0 for normal model without tagging
+cfg.ProPixxRefresh = 1440;
+% Setup Propixx  
+if  ~cfg.debugmode || cfg.DataPixxOnly
+    Datapixx('Open');
+    Datapixx('SetPropixxDlpSequenceProgram', cfg.ProPixxModel); 
+    Datapixx('RegWrRd');
+end
+
 %%%%%%%%%%%%%%%%%=================Frequency Tagging Timecourse======================%%%%%%%%%%%%%%%%%%%%%
 cfg.FreqMat = tagfreq;
-Para.FreqMat = cfg.FreqMat;
 cfg.WaveShape = 'sin';            %Shape of the waveform 'sin' for sinusoidal, 'square' for square wave
 cfg.Phaselock = 1;                %1=Phase locked RFT, same phase RFT stimulation for every trial; 0=random phase
 cfg.FreqBins = 8;                %Nr of frequency bins with non-phase locked RFT
@@ -319,7 +328,6 @@ if cfg.photoDiode
     diode_tex = Screen('MakeTexture', window, diode);
 end
 
-
 % calculate the amount of frames needed for each part of the experiment.
 %Get the maximal amount of frames to calculate the timecourse for
 max_trialframes = 1000*round((cfg.fix_t+cfg.fix_jitter)/ifi);%max frames per trial
@@ -327,14 +335,10 @@ max_trialframes = 1000*round((cfg.fix_t+cfg.fix_jitter)/ifi);%max frames per tri
 %Here we define the phase timecourse of the frequencies. To enable trial
 %averaging in the time domain, phase will be 0 at t=0 (zeroframe), stimulus (figure)
 %onset
-frame_mult=12; %every refresh is 12 frames
-
+frame_mult = round(cfg.ProPixxRefresh/[1/ifi]); %every refresh is 12 frames for tagging at 1440hz with a 120 Hz monitor
 %Effective presentation frequency. Should be 1440 for propixx
-Fs=(1/ifi)*frame_mult;
-cfg.Fs=Fs;
-disp(['Effective refresh rate: ' num2str(Fs,6) 'Hz']);
-
-if sum(cfg.FreqMat>Fs/2)>0
+disp(['Effective refresh rate: ' num2str(cfg.ProPixxRefresh,6) 'Hz']);
+if sum(cfg.FreqMat>cfg.ProPixxRefresh/2)>0
     warning('Presentation rate too low for the chosen flicker frequencies!')
 end
 
@@ -379,6 +383,9 @@ cfg.diodeTable = freqTable(dsearchn(cfg.FreqMat',tagfreq),:);
 
 %calculate all permutation of phase differences. It is important to balance
 %the phase differences well to properly cancel out phase interference
+%But for reading study, it's okay to use the locked phase, because when
+%fixation lands on the tagging word is difference over trails, which equals
+%'randomized' phase over trials
 tmp=[];
 combs=[];
 intervals=[1:cfg.FreqBins]-1;
@@ -397,14 +404,6 @@ if ~cfg.Phaselock
     end
     combsMat=repmat(combs,reps,1);
     cfg.combsMat=combsMat(randperm(size(combsMat,1)),:);
-end
-
-%%%%%%%%%%%%%%%%%=================Propixx initialization======================%%%%%%%%%%%%%%%%%%%%%
-% Setup Propixx 1440 Hz
-if  ~cfg.debugmode || cfg.DataPixxOnly
-    Datapixx('Open');
-    Datapixx('SetPropixxDlpSequenceProgram', 5); % 2 for 480, 5 for 1440 Hz, 0 for normal
-    Datapixx('RegWrRd');
 end
 
 %%%%%%%%%%%%%%%%%================= output setting ======================%%%%%%%%%%%%%%%%%%%%%
@@ -915,15 +914,13 @@ function [cfg] = sendTrigger(cfg,trig)
 %send trigger to MEG
 if ~cfg.debugmode
     io64(cfg.ioObjTrig,cfg.PortAddress,trig);
-    cfg.triggerTime = GetSecs;
-    cfg.triggerSent = 1;
-else
-    cfg.triggerTime = GetSecs;
+    cfg.triggerSent = 1;    
 end
 %send trigger to eyelink
 if cfg.el.eyelink
     Eyelink('Message', ['Trigger_' int2str(trig)]);
 end
+cfg.triggerTime = GetSecs;
 end
 
 function [] = cleanup(cfg)
@@ -979,7 +976,7 @@ elseif mode == 2
     Eyelink('Message', 'SYNCTIME');
 end
 %%% set screen to rapid mode
-Datapixx('SetPropixxDlpSequenceProgram', 5);
+Datapixx('SetPropixxDlpSequenceProgram',cfg.ProPixxModel);
 Datapixx('RegWrRd');
 %%% set screen to experiment background color
 Screen('FillRect', cfg.window, cfg.ScrBgc)
